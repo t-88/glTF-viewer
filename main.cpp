@@ -8,6 +8,10 @@
 #include "utils.hpp"
 #include "json.h"
 
+#include "imgui.h"
+#include "backends/imgui_impl_opengl3.h"
+#include "backends/imgui_impl_glfw.h"
+
 #include "shader.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -71,6 +75,16 @@ public:
 
 };
 
+void imgui_init(GLFWwindow* window) {
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      
+    ImGui_ImplGlfw_InitForOpenGL(window,true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+}
+
+
 
 void on_window_resize(GLFWwindow* window, int w, int h) {}
 int main() {
@@ -107,6 +121,9 @@ int main() {
     }
 
 
+
+
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
@@ -131,13 +148,17 @@ int main() {
     glfwSetFramebufferSizeCallback(window,on_window_resize);
 
 
+    imgui_init(window);
+
+
     Shader shader("./shader.vert","./shader.frag");
 
 
     uint32_t indices[] = {0 , 1 , 2,};
 
     Mesh mesh(mesh_vertices,mesh_indices,mesh_vertices.size() / 3);
-
+    
+    glEnable(GL_DEPTH_TEST);
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
@@ -149,9 +170,23 @@ int main() {
         mesh.render();
 
 
+        {
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+                ImGui::Button("click me");
+                
+
+            ImGui::EndFrame();
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        }
+      
+
         glfwSwapBuffers(window);
         glClearColor(0.f,0.f,0.f,1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
     
     shader.free();
