@@ -1,7 +1,10 @@
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
 #include <string>
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
+
 #include "json.h"
 
 
@@ -13,6 +16,7 @@
     printf("[ERROR] " msg"\n",__VA_ARGS__); \
     _Pragma("GCC diagnostic pop")
 #define ERROR(msg) ERROR_DY(msg,NULL) 
+
 
 
 std::string load_file_src(const char* file_path) {
@@ -54,11 +58,8 @@ static char shader_log[512];
 static int shader_status;
 
 
-void on_window_resize(GLFWwindow* window, int w, int h) {
-    // do nothing window is not resizable
-}
-#include <iostream>
-#include <fstream>
+void on_window_resize(GLFWwindow* window, int w, int h) {}
+
 int main() {
     Json::Value json;
 
@@ -80,7 +81,7 @@ int main() {
     
     printf("%d\n",position_accessor["count"].asInt());
     for (size_t i = 0; i < position_accessor["count"].asInt(); i++){
-        printf("%f %f %f\n",buffer[i * 3] , buffer[i * 3 + 1] , buffer[i * 3 + 2]);
+        // printf("%f %f %f\n",buffer[i * 3] , buffer[i * 3 + 1] , buffer[i * 3 + 2]);
     }
 
 
