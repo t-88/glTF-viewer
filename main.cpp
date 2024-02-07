@@ -5,54 +5,17 @@
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 
+#include "utils.hpp"
 #include "json.h"
+
+#include "shader.hpp"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 
 #define WIDTH 800
 #define HEIGHT 600
-#define ERROR_DY(msg,...) \
-    _Pragma("GCC diagnostic push")\
-        _Pragma("GCC diagnostic ignored \"-Wformat-extra-args\"")\
-    printf("[ERROR] " msg"\n",__VA_ARGS__); \
-    _Pragma("GCC diagnostic pop")
-#define ERROR(msg) ERROR_DY(msg,NULL) 
-
-
-
-std::string load_file_src(const char* file_path) {
-    FILE* f = fopen(file_path,"r");
-    if(!f) {
-        ERROR_DY("failed to open file %s",file_path);
-        fclose(f);
-    }
-    int state;    
-    
-    state = fseek(f,0,SEEK_END);
-    if(state == -1) {
-        ERROR_DY("failed to seek the end of the file %s",file_path);
-        fclose(f);
-        exit(-1);
-    }
-
-    long file_size =  ftell(f);
-    fseek(f,0,SEEK_SET);
-
-    char* src = (char*)malloc(file_size + 1);
-    state = fread(src,1,file_size,f);
-    if(state != file_size) {
-        ERROR_DY("failed to read the whole file %s",file_path);
-        fclose(f);
-        exit(-1);
-    }
-    src[file_size] = '\0';
-
-    std::string file_src(src);
-
-    free(src);
-    fclose(f);
-
-    return file_src;
-}
 
 static char shader_log[512];
 static int shader_status;
@@ -78,10 +41,9 @@ int main() {
     Json::Value& position_accessor = json["accessors"][primitive["attributes"]["POSITION"].asInt()];
     Json::Value& buffer_view = json["bufferViews"][position_accessor["bufferView"].asInt()];
     float* buffer = (float*)(bin_char.data() + buffer_view["byteOffset"].asInt());
-    
     printf("%d\n",position_accessor["count"].asInt());
     for (size_t i = 0; i < position_accessor["count"].asInt(); i++){
-        // printf("%f %f %f\n",buffer[i * 3] , buffer[i * 3 + 1] , buffer[i * 3 + 2]);
+        printf("%f %f %f\n",buffer[i * 3] , buffer[i * 3 + 1] , buffer[i * 3 + 2]);
     }
 
 
@@ -109,46 +71,10 @@ int main() {
     glfwSetFramebufferSizeCallback(window,on_window_resize);
 
 
-    uint32_t vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    std::string vertex_shader_src = load_file_src("./shader.vert"); 
-    const char* c_str_vertex_shader_src = vertex_shader_src.c_str();
-    glShaderSource(vertex_shader,1,&c_str_vertex_shader_src,NULL);
-    glCompileShader(vertex_shader);
-    glGetShaderiv(vertex_shader,GL_COMPILE_STATUS,&shader_status);
-    if(!shader_status) {
-        glGetShaderInfoLog(vertex_shader,512,NULL,shader_log);
-        ERROR_DY("failed to compile vertex shader %s",shader_log);
-        glfwTerminate();
-        return -1;
-    }
-
-    uint32_t fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    std::string fragment_shader_src = load_file_src("./shader.frag"); 
-    const char* c_str_fragment_shader_src = fragment_shader_src.c_str();
-    glShaderSource(fragment_shader,1,&c_str_fragment_shader_src,NULL);
-    glCompileShader(fragment_shader);
-    glGetShaderiv(fragment_shader,GL_COMPILE_STATUS,&shader_status);
-    if(!shader_status) {
-        glGetShaderInfoLog(fragment_shader,512,NULL,shader_log);
-        ERROR_DY("failed to compile vertex shader %s",shader_log);
-        glfwTerminate();
-        return -1;
-    }
-
-    uint32_t shader_program = glCreateProgram();
-    glAttachShader(shader_program,vertex_shader);
-    glAttachShader(shader_program,fragment_shader);
-    glLinkProgram(shader_program);
-    glGetProgramiv(shader_program,GL_LINK_STATUS,&shader_status);
-    if(!shader_status) {
-        glGetProgramInfoLog(shader_program,512,NULL,shader_log);
-        ERROR_DY("failed to link shader program %s",shader_log);
-        glfwTerminate();
-        return -1;
-    }
+    Shader shader("./shader.vert","./shader.frag");
 
     float vertices[] = {
-        0.0, 0.5,  0.0,
+        0.0, 0.4,  0.0,
         -0.5, -0.5, 0.0,
         0.5,  -0.5,  0.0,
     };
@@ -187,8 +113,8 @@ int main() {
             glfwSetWindowShouldClose(window,true);
         }
 
-
-        glUseProgram(shader_program);
+        shader.enable();
+        // glUseProgram(shader_program);
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES,3,GL_UNSIGNED_INT,indices);
 
@@ -198,8 +124,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
     }
     
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
+    shader.free();
     glfwDestroyWindow(window);
     glfwTerminate();
 
