@@ -3,6 +3,5 @@
 
 set -eux
 gcc -c  ./glad/src/glad.c -o build/glad.o    -I./glad/include/  
-g++ -c  main.cpp          -o ./build/main.o  -I./glad/include/ 
-g++ -o build/main build/glad.o build/main.o  `pkg-config --cflags --libs glfw3` `pkg-config --cflags --libs opengl`
+g++  main.cpp ./jsoncpp-1.9.5/lib_json/*.cpp     build/glad.o      -o ./build/main `pkg-config --cflags --libs glfw3` `pkg-config --cflags --libs opengl`  -I./glad/include/  -I./jsoncpp-1.9.5/include/ -I./jsoncpp-1.9.5/include/json/
 ./build/main

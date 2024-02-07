@@ -2,6 +2,8 @@
 #include <string>
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
+#include "json.h"
+
 
 #define WIDTH 800
 #define HEIGHT 600
@@ -55,7 +57,33 @@ static int shader_status;
 void on_window_resize(GLFWwindow* window, int w, int h) {
     // do nothing window is not resizable
 }
+#include <iostream>
+#include <fstream>
 int main() {
+    Json::Value json;
+
+    std::ifstream json_file("assets/box.gltf",std::ios::binary);
+    json_file >> json;
+    json_file.close();
+    
+    std::ifstream bin_file("assets/Box0.bin",std::ios::binary | std::ios::ate);
+    size_t bin_len = bin_file.tellg();
+    bin_file.seekg(0);
+    std::vector<char> bin_char(bin_len);
+    bin_file.read(bin_char.data(),bin_len);
+    bin_file.close();
+    
+    Json::Value& primitive = json["meshes"][0]["primitives"][0];         
+    Json::Value& position_accessor = json["accessors"][primitive["attributes"]["POSITION"].asInt()];
+    Json::Value& buffer_view = json["bufferViews"][position_accessor["bufferView"].asInt()];
+    float* buffer = (float*)(bin_char.data() + buffer_view["byteOffset"].asInt());
+    
+    printf("%d\n",position_accessor["count"].asInt());
+    for (size_t i = 0; i < position_accessor["count"].asInt(); i++){
+        printf("%f %f %f\n",buffer[i * 3] , buffer[i * 3 + 1] , buffer[i * 3 + 2]);
+    }
+
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
@@ -71,13 +99,11 @@ int main() {
         return -1;
     }
     glfwMakeContextCurrent(window);
-
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         ERROR("failed tp load opengl function");
         glfwTerminate();
         return -1;
     }
-
     glViewport(0,0,WIDTH,HEIGHT);
     glfwSetFramebufferSizeCallback(window,on_window_resize);
 
