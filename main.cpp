@@ -105,20 +105,20 @@ int main() {
 
 
                 ImGui::Text("Transalte:");
-                bool translate_updated = ImGui::InputFloat3("##translation",&translate[0]);
+                bool translate_updated = MyGui::InputFloat3WithScroll("##translation",&translate[0],0.1);
                 if(translate_updated) {
                     translation_mat = glm::translate(glm::mat4x4(1.),translate);
                 }    
 
                 ImGui::Text("Rotation:");
-                bool rotation_updated = ImGui::InputFloat3("##rotation",&rotation[0]);
+                bool rotation_updated = MyGui::InputFloat3WithScroll("##rotation",&rotation[0],5);
                 if(rotation_updated) {
                     rotation_mat = glm::rotate(glm::mat4x4(1.),glm::radians(rotation.x),glm::vec3(1.,0.,0.));
                     rotation_mat = glm::rotate(rotation_mat,glm::radians(rotation.y),glm::vec3(0.,1.,0.));
                     rotation_mat = glm::rotate(rotation_mat,glm::radians(rotation.z),glm::vec3(0.,0.,1.));
                 }
                 ImGui::Text("Scale:");
-                bool scale_updated = ImGui::InputFloat3("##scaling",&scale[0]);
+                bool scale_updated = MyGui::InputFloat3WithScroll("##scaling",&scale[0]);
                 if(scale_updated) {
                     scale_mat = glm::scale(glm::mat4x4(1.),scale);
                 }      
@@ -129,6 +129,8 @@ int main() {
                     shader.enable();
                     shader.set_mat4x4("model",glm::value_ptr(model));
                 }          
+
+
                 
 
             ImGui::EndFrame();

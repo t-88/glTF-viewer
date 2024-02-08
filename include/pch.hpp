@@ -32,5 +32,6 @@
 #include "shader.hpp"
 #include "mesh.hpp"
 #include "gltf_loader.hpp"
+#include "my_gui.hpp"
 
 #endif
