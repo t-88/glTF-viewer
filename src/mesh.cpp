@@ -24,6 +24,51 @@ Mesh::Mesh(std::vector<float> _vertices, std::vector<uint16_t> _indices)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
+
+
+Mesh::Mesh(std::vector<float> _vertices,std::vector<float> _normals, std::vector<uint16_t> _indices)
+{
+    vertices = _vertices;
+    normals = _normals;
+    indices = _indices;
+
+    for (size_t i = 0; i < vertices.size() / 3; i++) {
+        buffer.push_back(vertices[3 * i + 0]);        
+        buffer.push_back(vertices[3 * i + 1]);        
+        buffer.push_back(vertices[3 * i + 2]);        
+        
+        buffer.push_back(normals[3 * i + 0]);        
+        buffer.push_back(normals[3 * i + 1]);        
+        buffer.push_back(normals[3 * i + 2]);        
+    }
+    
+
+
+
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ebo);
+
+    glBindVertexArray(vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(buffer[0]), buffer.data(), GL_STATIC_DRAW);
+    
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)( 3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+
+
 Mesh::~Mesh() {}
 
 void Mesh::render()

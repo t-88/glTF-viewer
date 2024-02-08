@@ -56,7 +56,7 @@ int main() {
 
     GltfLoader gltf_loader("assets/box.gltf","assets/Box0.bin");
     Shader shader("./shader.vert","./shader.frag");
-    Mesh mesh(gltf_loader.vertices,gltf_loader.indices);
+    Mesh mesh(gltf_loader.vertices,gltf_loader.normals,gltf_loader.indices);
 
 
 
@@ -78,10 +78,13 @@ int main() {
     glm::mat4 view = glm::mat4(1.);
     glm::mat4 proj = glm::perspective(glm::radians(45.f),(float)SCENE_WIDTH/HEIGHT,0.1f,100.f);
     
+    glm::vec3 light_dir = glm::vec3(0,0,1.);
+
     shader.enable();
     shader.set_mat4x4("proj",glm::value_ptr(proj));
     shader.set_mat4x4("view",glm::value_ptr(view));
     shader.set_mat4x4("model",glm::value_ptr(model));
+    shader.set_vec3("light_dir",std::vector<float>{ light_dir.x,light_dir.y,light_dir.z });
 
 
     glEnable(GL_DEPTH_TEST);
