@@ -2,6 +2,7 @@
 
 Mesh::Mesh(std::vector<float> _vertices, std::vector<uint16_t> _indices)
 {
+    
     vertices = _vertices;
     indices = _indices;
 

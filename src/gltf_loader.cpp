@@ -21,7 +21,7 @@ GltfLoader::GltfLoader(const char *gltf_path, const char *gltf_bin)
     {
         vertices.push_back(buffer[i * 3 + 0]);
         vertices.push_back(buffer[i * 3 + 1]);
-        vertices.push_back(0);
+        vertices.push_back(buffer[i * 3 + 2]);
     }
 
     Json::Value &indices_accessor = json["accessors"][0];
