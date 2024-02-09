@@ -62,6 +62,7 @@ int main() {
 
     GltfLoader gltf_loader("assets/box_indices/box.gltf");
     Shader shader("./shader.vert","./shader.frag");
+
     Mesh mesh(gltf_loader.vertices,gltf_loader.normals,gltf_loader.indices);
 
     glm::vec3 rotation(0.);

@@ -11,6 +11,7 @@ void GltfLoader::parse_node(GltfNode node) {
             vertices.push_back(pos_buf[i * 3 + 1]);
             vertices.push_back(pos_buf[i * 3 + 2]);
         }
+
         GltfAccessor normal_accessor = gltf_obj.accessors[mesh.normal_idx];
         GltfBufferView normal_buffer_view = gltf_obj.buffer_views[normal_accessor.buffer_view_idx];
         float* normals_buf = (float*)(gltf_obj.buffers[normal_buffer_view.buffer_idx].data() + normal_accessor.byte_offset + normal_buffer_view.byte_offset); 
@@ -20,11 +21,13 @@ void GltfLoader::parse_node(GltfNode node) {
             normals.push_back(normals_buf[i * 3 + 2]);
         }
 
-        GltfAccessor indices_accessor = gltf_obj.accessors[mesh.indices_idx];
-        GltfBufferView indices_buffer_view = gltf_obj.buffer_views[indices_accessor.buffer_view_idx];
-        uint16_t* indices_buf = (uint16_t*)(gltf_obj.buffers[indices_buffer_view.buffer_idx].data() + indices_accessor.byte_offset + indices_buffer_view.byte_offset); 
-        for (size_t i = 0; i < indices_accessor.count; i++) {
-            indices.push_back(indices_buf[i]);
+        if(mesh.indices_idx.size() != 0) {
+            GltfAccessor indices_accessor = gltf_obj.accessors[mesh.indices_idx];
+            GltfBufferView indices_buffer_view = gltf_obj.buffer_views[indices_accessor.buffer_view_idx];
+            uint16_t* indices_buf = (uint16_t*)(gltf_obj.buffers[indices_buffer_view.buffer_idx].data() + indices_accessor.byte_offset + indices_buffer_view.byte_offset); 
+            for (size_t i = 0; i < indices_accessor.count; i++) {
+                indices.push_back(indices_buf[i]);
+            }
         }
     }
 
@@ -102,9 +105,13 @@ void GltfLoader::parse_nodes() {
             }
             // mesh
             if(json["nodes"][key].isMember("mesh")) { 
-                node.mesh_idx = json["nodes"][key]["mesh"].asString();
-            }
-            gltf_obj.nodes[std::to_string(i)] = node;
+                node.mesh_idx = json["nodes"][key]["mesh"].asString(); 
+            } else if(json["nodes"][key].isMember("meshes")) { 
+                node.mesh_idx = json["nodes"][key]["meshes"][0].asString();
+            } 
+
+            gltf_obj.nodes[key] = node;
+            printf("    -> %s\n",gltf_obj.nodes[key].mesh_idx.c_str());
         }
     }
 }
@@ -213,8 +220,6 @@ void GltfLoader::parse_scenes_and_main_scene() {
             }
             gltf_obj.scenes[std::to_string(i)] = scene; 
         }    
-        gltf_obj.main_scene_idx = "0"; 
-
     } else {
         for (int i = 0; i < json["scenes"].size(); i++) {
             GltfScene scene;
@@ -226,10 +231,8 @@ void GltfLoader::parse_scenes_and_main_scene() {
             }
             gltf_obj.scenes[key] = scene; 
         }    
-        gltf_obj.main_scene_idx = json["scene"].asString(); 
     }
-    gltf_obj.main_scene = gltf_obj.scenes[gltf_obj.main_scene_idx];
-
+    gltf_obj.main_scene = gltf_obj.scenes[json["scene"].asString()];
 
 }
 
@@ -266,8 +269,7 @@ GltfLoader::GltfLoader(const char *gltf_path)
     parse_scenes_and_main_scene();
     
 
-
-    GltfNode main_node = gltf_obj.nodes[gltf_obj.main_scene.nodes[gltf_obj.main_scene_idx]];
+    GltfNode main_node = gltf_obj.nodes[gltf_obj.main_scene.nodes["0"]];
     parse_node(main_node);
 }
 
