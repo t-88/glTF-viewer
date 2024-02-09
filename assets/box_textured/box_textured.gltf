@@ -92,9 +92,6 @@
             "uri": "BoxTextured.bin"
         }
     },
-    "extensionsUsed": [
-        "KHR_materials_common"
-    ],
     "images": {
         "Image0001": {
             "name": "Image0001",
@@ -103,25 +100,18 @@
     },
     "materials": {
         "Effect-Texture": {
-            "extensions": {
-                "KHR_materials_common": {
-                    "doubleSided": false,
-                    "jointCount": 0,
-                    "technique": "PHONG",
-                    "transparent": false,
-                    "values": {
-                        "diffuse": "texture_Image0001",
-                        "shininess": 256,
-                        "specular": [
-                            0.2,
-                            0.2,
-                            0.2,
-                            1
-                        ]
-                    }
-                }
-            },
-            "name": "Texture"
+            "name": "Texture",
+            "technique": "technique0",
+            "values": {
+                "diffuse": "texture_Image0001",
+                "shininess": 256,
+                "specular": [
+                    0.2,
+                    0.2,
+                    0.2,
+                    1
+                ]
+            }
         }
     },
     "meshes": {
@@ -239,6 +229,17 @@
             "name": "Cesium_Logo_Flat__Image___Texture_"
         }
     },
+    "programs": {
+        "program_0": {
+            "attributes": [
+                "a_normal",
+                "a_position",
+                "a_texcoord0"
+            ],
+            "fragmentShader": "BoxTextured0FS",
+            "vertexShader": "BoxTextured0VS"
+        }
+    },
     "samplers": {
         "sampler_0": {
             "magFilter": 9729,
@@ -255,7 +256,76 @@
             ]
         }
     },
+    "shaders": {
+        "BoxTextured0FS": {
+            "type": 35632,
+            "uri": "BoxTextured0FS.glsl"
+        },
+        "BoxTextured0VS": {
+            "type": 35633,
+            "uri": "BoxTextured0VS.glsl"
+        }
+    },
     "skins": {},
+    "techniques": {
+        "technique0": {
+            "attributes": {
+                "a_normal": "normal",
+                "a_position": "position",
+                "a_texcoord0": "texcoord0"
+            },
+            "parameters": {
+                "diffuse": {
+                    "type": 35678
+                },
+                "modelViewMatrix": {
+                    "semantic": "MODELVIEW",
+                    "type": 35676
+                },
+                "normal": {
+                    "semantic": "NORMAL",
+                    "type": 35665
+                },
+                "normalMatrix": {
+                    "semantic": "MODELVIEWINVERSETRANSPOSE",
+                    "type": 35675
+                },
+                "position": {
+                    "semantic": "POSITION",
+                    "type": 35665
+                },
+                "projectionMatrix": {
+                    "semantic": "PROJECTION",
+                    "type": 35676
+                },
+                "shininess": {
+                    "type": 5126
+                },
+                "specular": {
+                    "type": 35666
+                },
+                "texcoord0": {
+                    "semantic": "TEXCOORD_0",
+                    "type": 35664
+                }
+            },
+            "program": "program_0",
+            "states": {
+                "enable": [
+                    2929,
+                    2884
+                ]
+            },
+            "uniforms": {
+                "u_diffuse": "diffuse",
+                "u_modelViewMatrix": "modelViewMatrix",
+                "u_normalMatrix": "normalMatrix",
+                "u_projectionMatrix": "projectionMatrix",
+                "u_shininess": "shininess",
+                "u_specular": "specular"
+            }
+        }
+    },
     "textures": {
         "texture_Image0001": {
             "format": 6408,

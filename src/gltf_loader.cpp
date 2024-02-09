@@ -30,6 +30,19 @@ void GltfLoader::parse_node(GltfNode node) {
                 indices.push_back(indices_buf[i]);
             }
         }
+
+        // only deal with one texture
+        if(mesh.texture_idx.size() != 0) {
+            GltfAccessor texture_accessor = gltf_obj.accessors[mesh.texture_idx[0]];
+            GltfBufferView texture_buffer_view = gltf_obj.buffer_views[texture_accessor.buffer_view_idx];
+            uint16_t* texture_buf = (uint16_t*)(gltf_obj.buffers[texture_buffer_view.buffer_idx].data() + texture_accessor.byte_offset + texture_buffer_view.byte_offset); 
+            std::vector<float> texture;
+            for (size_t i = 0; i < texture_accessor.count; i++) {
+                texture.push_back(texture_buf[2 * i + 0]);
+                texture.push_back(texture_buf[2 * i + 1]);
+            }            
+            textures.push_back(texture);
+        }
     }
 
     for (size_t i = 0; i < node.children.size(); i++) {
@@ -49,6 +62,12 @@ void GltfLoader::parse_meshes() {
             if(json["meshes"][i]["primitives"][0]["attributes"].isMember("POSITION")) { 
                 mesh.position_idx = std::to_string(json["meshes"][i]["primitives"][0]["attributes"]["POSITION"].asInt());
             }
+
+            // just handle one texture as a start 
+            if(json["meshes"][i]["primitives"][0]["attributes"].isMember("TEXCOORD_0")) { 
+                mesh.texture_idx.push_back(std::to_string(json["meshes"][i]["primitives"][0]["attributes"]["TEXCOORD_0"].asInt()));
+            }  
+
             if(json["meshes"][i]["primitives"][0].isMember("indices")) { 
                 mesh.indices_idx = std::to_string(json["meshes"][i]["primitives"][0]["indices"].asInt());
             }
@@ -65,6 +84,12 @@ void GltfLoader::parse_meshes() {
             if(json["meshes"][key]["primitives"][0]["attributes"].isMember("POSITION")) { 
                 mesh.position_idx = json["meshes"][key]["primitives"][0]["attributes"]["POSITION"].asString();
             }
+
+            // just handle one texture as a start 
+            if(json["meshes"][key]["primitives"][0]["attributes"].isMember("TEXCOORD_0")) { 
+                mesh.texture_idx.push_back(json["meshes"][key]["primitives"][0]["attributes"]["TEXCOORD_0"].asString());
+            }   
+
             if(json["meshes"][key]["primitives"][0].isMember("indices")) { 
                 mesh.indices_idx = json["meshes"][key]["primitives"][0]["indices"].asString();
             }
@@ -245,10 +270,11 @@ void GltfLoader::load_textures() {
         for (int i = 0; i < json["images"].size(); i++) {
             std::string uri = gltf_obj.dir_path + json["images"][i]["uri"].asString();
         
-            int w ,h;
-            uint8_t* data =  stbi_load(uri.c_str(),&w,&h,0,3);
-            std::vector<uint8_t> data_vec(data,data + w * h *3);
-            gltf_obj.textures[std::to_string(i)] = data_vec;
+
+            GltfTexture texture;
+            uint8_t* data =  stbi_load(uri.c_str(),&texture.w,&texture.h,0,3);
+            texture.data =  std::vector<uint8_t>(data,data + texture.w * texture.h * 3);
+            gltf_obj.textures[std::to_string(i)] = texture;
 
             stbi_image_free(data);
         }
@@ -257,18 +283,15 @@ void GltfLoader::load_textures() {
             std::string key = json["images"].getMemberNames()[i];
             std::string uri = gltf_obj.dir_path + json["images"][key]["uri"].asString();
 
-            int w ,h;
-            uint8_t* data =  stbi_load(uri.c_str(),&w,&h,0,3);
-            std::vector<uint8_t> data_vec(data,data + w * h *3);
-            gltf_obj.textures[key] = data_vec;
+
+            GltfTexture texture;
+            uint8_t* data =  stbi_load(uri.c_str(),&texture.w,&texture.h,0,3);
+            texture.data =  std::vector<uint8_t>(data,data + texture.w * texture.h * 3);
+            gltf_obj.textures[key] = texture;
 
             stbi_image_free(data);
-
         }
     }
-}
-void GltfLoader::parse_textures_coords() { 
-
 }
 
 
@@ -306,7 +329,6 @@ GltfLoader::GltfLoader(const char *gltf_path)
     
     // textures 
     load_textures();
-    parse_textures_coords();
 
     GltfNode main_node = gltf_obj.nodes[gltf_obj.main_scene.nodes["0"]];
     parse_node(main_node);

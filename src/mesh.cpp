@@ -26,7 +26,7 @@ Mesh::Mesh(std::vector<float> _vertices, std::vector<uint16_t> _indices)
 }
 
 
-Mesh::Mesh(std::vector<float> _vertices,std::vector<float> _normals, std::vector<uint16_t> _indices)
+Mesh::Mesh(std::vector<float> _vertices,std::vector<float> _normals, std::vector<uint16_t> _indices,std::vector<std::vector<float>> textures)
 {
     vertices = _vertices;
     normals = _normals;
@@ -63,10 +63,24 @@ Mesh::Mesh(std::vector<float> _vertices,std::vector<float> _normals, std::vector
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
     }
-
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+
+    uint texture0;
+    glGenTextures(1,&texture0);
+    glBindTexture(GL_TEXTURE_2D,texture0);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,)
+
+
+
 }
 
 

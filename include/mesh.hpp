@@ -18,7 +18,7 @@ public:
     std::vector<uint16_t> indices;
     
     Mesh(std::vector<float> _vertices,std::vector<uint16_t> _indices);
-    Mesh(std::vector<float> _vertices, std::vector<float> _normals,std::vector<uint16_t> _indices );
+    Mesh(std::vector<float> _vertices,std::vector<float> _normals, std::vector<uint16_t> _indices,std::vector<std::vector<float>> textures);
     ~Mesh();
     void render();
 

@@ -6,7 +6,7 @@
 
 struct GltfMesh {
     std::string normal_idx , position_idx ,indices_idx;
-
+    std::vector<std::string> texture_idx;
     GltfMesh() {
         normal_idx = "";
         position_idx = "";
@@ -48,6 +48,11 @@ struct GltfBufferView {
     }    
 };
 
+struct GltfTexture {
+    std::vector<uint8_t> data;
+    int w , h;
+};
+
 struct GltfObj {
     std::string main_scene_idx;
     GltfScene main_scene;
@@ -61,7 +66,7 @@ struct GltfObj {
 
     std::string dir_path;
     std::map<std::string,std::vector<char>> buffers;
-    std::map<std::string,std::vector<uint8_t>> textures;
+    std::map<std::string,GltfTexture> textures;
 
 
 };
@@ -73,6 +78,7 @@ public:
     std::vector<float> vertices;
     std::vector<uint16_t> indices;
     std::vector<float> normals;
+    std::vector<std::vector<float>> textures;
 
 
     GltfObj gltf_obj;
@@ -87,7 +93,6 @@ public:
     void extract_dir_path(std::string gltf_path);
     void parse_scenes_and_main_scene();
     void load_textures();
-    void parse_textures_coords();
 
 
 

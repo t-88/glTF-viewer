@@ -63,7 +63,7 @@ int main() {
     GltfLoader gltf_loader("assets/box_textured/box_textured.gltf");
     Shader shader("./shader.vert","./shader.frag");
 
-    Mesh mesh(gltf_loader.vertices,gltf_loader.normals,gltf_loader.indices);
+    Mesh mesh(gltf_loader.vertices,gltf_loader.normals,gltf_loader.indices,gltf_loader.textures);
 
     glm::vec3 rotation(0.);
     glm::mat4x4 rotation_mat(1.);
