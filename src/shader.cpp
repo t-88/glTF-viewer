@@ -1,6 +1,6 @@
 #include "pch.hpp"
 #include "shader.hpp"
-
+#include "utils.hpp"
 
 static char shader_log[512];
 static int shader_status;

@@ -1,8 +1,7 @@
 #include "gltf_loader.hpp"
 
 void GltfLoader::parse_node(GltfNode node) {
-    if(node.mesh_idx != -1) {
-
+    if(node.mesh_idx.size() != 0) {
         GltfMesh mesh = gltf_obj.meshes[node.mesh_idx];
         GltfAccessor pos_accessor = gltf_obj.accessors[mesh.position_idx];
         GltfBufferView pos_buffer_view = gltf_obj.buffer_views[pos_accessor.buffer_view_idx];
@@ -12,7 +11,6 @@ void GltfLoader::parse_node(GltfNode node) {
             vertices.push_back(pos_buf[i * 3 + 1]);
             vertices.push_back(pos_buf[i * 3 + 2]);
         }
-
         GltfAccessor normal_accessor = gltf_obj.accessors[mesh.normal_idx];
         GltfBufferView normal_buffer_view = gltf_obj.buffer_views[normal_accessor.buffer_view_idx];
         float* normals_buf = (float*)(gltf_obj.buffers[normal_buffer_view.buffer_idx].data() + normal_accessor.byte_offset + normal_buffer_view.byte_offset); 
@@ -29,12 +27,213 @@ void GltfLoader::parse_node(GltfNode node) {
             indices.push_back(indices_buf[i]);
         }
     }
+
     for (size_t i = 0; i < node.children.size(); i++) {
         parse_node(gltf_obj.nodes[node.children[i]]);
     }
 }
 
-GltfLoader::GltfLoader(const char *gltf_path, const char *gltf_bin)
+
+void GltfLoader::parse_meshes() {
+    if(json["meshes"].isArray()) {
+
+        for (int i = 0; i < json["meshes"].size(); i++) {
+            GltfMesh mesh;
+            if(json["meshes"][i]["primitives"][0]["attributes"].isMember("NORMAL")) {
+                mesh.normal_idx =  std::to_string(json["meshes"][i]["primitives"][0]["attributes"]["NORMAL"].asInt());
+            }
+            if(json["meshes"][i]["primitives"][0]["attributes"].isMember("POSITION")) { 
+                mesh.position_idx = std::to_string(json["meshes"][i]["primitives"][0]["attributes"]["POSITION"].asInt());
+            }
+            if(json["meshes"][i]["primitives"][0].isMember("indices")) { 
+                mesh.indices_idx = std::to_string(json["meshes"][i]["primitives"][0]["indices"].asInt());
+            }
+            gltf_obj.meshes[std::to_string(i)] = mesh;
+        }
+    } else {
+        for (int i = 0; i < json["meshes"].size(); i++) {
+            GltfMesh mesh;
+            std::string key = json["meshes"].getMemberNames()[i];
+
+            if(json["meshes"][key]["primitives"][0]["attributes"].isMember("NORMAL")) {
+                mesh.normal_idx = json["meshes"][key]["primitives"][0]["attributes"]["NORMAL"].asString();
+            }
+            if(json["meshes"][key]["primitives"][0]["attributes"].isMember("POSITION")) { 
+                mesh.position_idx = json["meshes"][key]["primitives"][0]["attributes"]["POSITION"].asString();
+            }
+            if(json["meshes"][key]["primitives"][0].isMember("indices")) { 
+                mesh.indices_idx = json["meshes"][key]["primitives"][0]["indices"].asString();
+            }
+            gltf_obj.meshes[key] = mesh;
+        }
+    }
+
+
+    // for (auto const& it  : gltf_obj.meshes) {
+    //     printf("%s %s %s %s\n",it.first.c_str(),it.second.indices_idx.c_str(), it.second.position_idx.c_str(),it.second.normal_idx.c_str());
+    // }
+}
+void GltfLoader::parse_nodes() { 
+    if(json["nodes"].isArray()) {
+        for (int i = 0; i < json["nodes"].size(); i++) {
+            GltfNode node;
+            // children 
+            if(json["nodes"][i].isMember("children")) {
+                for (int j = 0; j < json["nodes"][i]["children"].size(); j++) {
+                    node.children.push_back(json["nodes"][i]["children"][j].asString());
+                }
+            }
+            // mesh
+            if(json["nodes"][i].isMember("mesh")) { 
+                node.mesh_idx = json["nodes"][i]["mesh"].asString();
+            }
+            gltf_obj.nodes[std::to_string(i)] = node;
+        }
+    } else {
+        for (int i = 0; i < json["nodes"].size(); i++) {
+            GltfNode node;
+            std::string key = json["nodes"].getMemberNames()[i];
+
+            // children 
+            if(json["nodes"][key].isMember("children")) {
+                for (int j = 0; j < json["nodes"][key]["children"].size(); j++) {
+                    node.children.push_back(json["nodes"][key]["children"][j].asString());
+                }
+            }
+            // mesh
+            if(json["nodes"][key].isMember("mesh")) { 
+                node.mesh_idx = json["nodes"][key]["mesh"].asString();
+            }
+            gltf_obj.nodes[std::to_string(i)] = node;
+        }
+    }
+}
+void GltfLoader::parse_accessor() {
+    if(json["accessors"].isArray()) { 
+        for (int i = 0; i < json["accessors"].size(); i++) {
+            GltfAccessor accessor;
+
+            accessor.buffer_view_idx = json["accessors"][i]["bufferView"].asString();
+            accessor.byte_offset = json["accessors"][i]["byteOffset"].asInt();
+            accessor.count = json["accessors"][i]["count"].asInt();
+
+            gltf_obj.accessors[std::to_string(i)] = accessor;
+        }
+    } else {
+        for (int i = 0; i < json["accessors"].size(); i++) {
+            GltfAccessor accessor;
+            std::string key = json["accessors"].getMemberNames()[i];
+
+            accessor.buffer_view_idx = json["accessors"][key]["bufferView"].asString();
+            accessor.byte_offset = json["accessors"][key]["byteOffset"].asInt();
+            accessor.count = json["accessors"][key]["count"].asInt();
+
+            gltf_obj.accessors[key] = accessor;
+        }        
+    }
+}
+void GltfLoader::parse_buffer_views() {
+    if(json["bufferViews"].isArray()) {  
+        for (int i = 0; i < json["bufferViews"].size(); i++) {
+            GltfBufferView buffer_view;
+    
+            buffer_view.buffer_idx = json["bufferViews"] [i]["buffer"].asString();
+            buffer_view.byte_offset = json["bufferViews"][i]["byteOffset"].asInt();
+            buffer_view.byte_len = json["bufferViews"]   [i]["byteLength"].asInt();
+            
+            gltf_obj.buffer_views[std::to_string(i)] = buffer_view;
+    
+        }
+    } else {
+        for (int i = 0; i < json["bufferViews"].size(); i++) {
+            GltfBufferView buffer_view;
+            std::string key = json["bufferViews"].getMemberNames()[i];
+    
+            buffer_view.buffer_idx = json["bufferViews"] [key]["buffer"].asString();
+            buffer_view.byte_offset = json["bufferViews"][key]["byteOffset"].asInt();
+            buffer_view.byte_len = json["bufferViews"]   [key]["byteLength"].asInt();
+            
+            gltf_obj.buffer_views[key] = buffer_view;
+    
+        }        
+    }
+}
+void GltfLoader::parse_and_load_buffers(std::string gltf_path) {
+    extract_dir_path(gltf_path);
+
+    if(json["buffers"].isArray()) {  
+        for (int i = 0; i < json["buffers"].size(); i++) {
+            std::string uri = json["buffers"][i]["uri"].asString();
+            int buffer_len = json["buffers"][i]["byteLength"].asInt();
+
+            std::ifstream bin_file(gltf_obj.dir_path + uri, std::ios::binary);
+                std::vector<char> bin_char(buffer_len);
+                bin_file.read(bin_char.data(),buffer_len);
+            bin_file.close();
+
+            gltf_obj.buffers[std::to_string(i)] =  bin_char;
+        }
+    } else {
+        for (int i = 0; i < json["buffers"].size(); i++) {
+            std::string key = json["buffers"].getMemberNames()[i];
+
+            std::string uri = json["buffers"][key]["uri"].asString();
+            int buffer_len = json["buffers"][key]["byteLength"].asInt();
+    
+
+            std::ifstream bin_file(gltf_obj.dir_path + uri, std::ios::binary);
+                std::vector<char> bin_char(buffer_len);
+                bin_file.read(bin_char.data(),buffer_len);
+            bin_file.close();
+
+            gltf_obj.buffers[key] =  bin_char;
+        }
+    }
+}
+void GltfLoader::extract_dir_path(std::string gltf_path) {
+    // buffers only supports bin files
+    // get gltf dir, needed when handling buffers
+    std::string gltf_path_str = std::string(gltf_path);
+    int last_slash = gltf_path_str.find_last_of("/");
+    if(last_slash != -1) {
+        gltf_obj.dir_path = gltf_path_str.substr(0,last_slash + 1);
+    } else {
+        // no slash
+        gltf_obj.dir_path = "";
+    }
+}
+void GltfLoader::parse_scenes_and_main_scene() {
+    if(json["scenes"].isArray()) {
+        for (int i = 0; i < json["scenes"].size(); i++) {
+            GltfScene scene;
+            if(json["scenes"][i].isMember("nodes")) {
+                for (int j = 0; j < json["scenes"][i]["nodes"].size(); j++) {
+                    scene.nodes[std::to_string(j)] = json["scenes"][i]["nodes"][j].asString();
+                }
+            }
+            gltf_obj.scenes[std::to_string(i)] = scene; 
+        }    
+        gltf_obj.main_scene_idx = "0"; 
+
+    } else {
+        for (int i = 0; i < json["scenes"].size(); i++) {
+            GltfScene scene;
+            std::string key = json["scenes"].getMemberNames()[i];
+            if(json["scenes"][key].isMember("nodes")) {
+                for (int j = 0; j < json["scenes"][key]["nodes"].size(); j++) {
+                    scene.nodes[std::to_string(j)] = json["scenes"][key]["nodes"][j].asString();
+                }
+            }
+            gltf_obj.scenes[key] = scene; 
+        }    
+        gltf_obj.main_scene_idx = json["scene"].asString(); 
+    }
+    gltf_obj.main_scene = gltf_obj.scenes[gltf_obj.main_scene_idx];
+
+
+}
+
+GltfLoader::GltfLoader(const char *gltf_path)
 {
     // reading the gltf and bin files
     std::ifstream json_file(gltf_path, std::ios::binary);
@@ -45,113 +244,30 @@ GltfLoader::GltfLoader(const char *gltf_path, const char *gltf_bin)
 
 
     // parsing
+
     // meshes
-    for (int i = 0; i < json["meshes"].size(); i++) {
-        GltfMesh mesh;
-        
-        if(json["meshes"][i]["primitives"][0]["attributes"].isMember("NORMAL")) {
-            mesh.normal_idx = json["meshes"][i]["primitives"][0]["attributes"]["NORMAL"].asInt();
-        }
-        if(json["meshes"][i]["primitives"][0]["attributes"].isMember("POSITION")) { 
-            mesh.position_idx = json["meshes"][i]["primitives"][0]["attributes"]["POSITION"].asInt();
-        }
-        if(json["meshes"][i]["primitives"][0].isMember("indices")) { 
-            mesh.indices_idx = json["meshes"][i]["primitives"][0]["indices"].asInt();
-        }
+    parse_meshes();   
 
-        gltf_obj.meshes.push_back(mesh);
-    }
-    
     // nodes
-    for (int i = 0; i < json["nodes"].size(); i++) {
-        GltfNode node;
-        
-        // children 
-        if(json["nodes"][i].isMember("children")) {
-            for (int j = 0; j < json["nodes"][i]["children"].size(); j++) {
-                node.children.push_back(json["nodes"][i]["children"][j].asInt());
-            }
-        }
-        // mesh
-        if(json["nodes"][i].isMember("mesh")) { 
-            node.mesh_idx = json["nodes"][i]["mesh"].asInt();
-        }
+    parse_nodes();
 
-        gltf_obj.nodes.push_back(node);
-    }
-     
     // accessors
-    for (int i = 0; i < json["accessors"].size(); i++) {
-        GltfAccessor accessor;
+    parse_accessor();
 
-        accessor.buffer_view_idx = json["accessors"][i]["bufferView"].asInt();
-        accessor.byte_offset = json["accessors"][i]["byteOffset"].asInt();
-        accessor.count = json["accessors"][i]["count"].asInt();
 
-        gltf_obj.accessors.push_back(accessor);
-    }
-    
     // buffer views
-    for (int i = 0; i < json["bufferViews"].size(); i++) {
-        GltfBufferView buffer_view;
+    parse_buffer_views();
 
-        buffer_view.buffer_idx = json["bufferViews"] [i]["buffer"].asInt();
-        buffer_view.byte_offset = json["bufferViews"][i]["byteOffset"].asInt();
-        buffer_view.byte_len = json["bufferViews"]   [i]["byteLength"].asInt();
-        
-        gltf_obj.buffer_views.push_back(buffer_view);
-
-    }
-
-    // buffers only supports bin files
-    
-    // get gltf dir, needed when handling buffers
-    std::string gltf_path_str = std::string(gltf_path);
-    int last_slash = gltf_path_str.find_last_of("/");
-    if(last_slash != -1) {
-        gltf_obj.dir_path = gltf_path_str.substr(0,last_slash + 1);
-    } else {
-        // no slash
-        gltf_obj.dir_path = "";
-    }
+    // buffers
+    parse_and_load_buffers(gltf_path);
 
 
-    for (int i = 0; i < json["buffers"].size(); i++) {
-        std::string uri = json["buffers"][i]["uri"].asString();
-        int buffer_len = json["buffers"][i]["byteLength"].asInt();
-
-        std::ifstream bin_file(gltf_bin, std::ios::binary);
-            std::vector<char> bin_char(buffer_len);
-            bin_file.read(bin_char.data(),buffer_len);
-        bin_file.close();
-
-        gltf_obj.buffers.push_back(bin_char);
-    }
+    //scenes
+    parse_scenes_and_main_scene();
     
 
-    // only handling if the main scene is int 
-    // for now :) 
-    if(json["scene"].isInt()) {
-        // scenes
-        for (int i = 0; i < json["scenes"].size(); i++) {
-            GltfScene scene;
-            if(json["scenes"][i].isMember("nodes")) { 
-                for (int j = 0; j < json["scenes"][i]["nodes"].size(); j++) {
-                    scene.nodes.push_back(json["scenes"][i]["nodes"][j].asInt());
-                }
 
-            }
-            gltf_obj.scenes[std::to_string(i)] = scene; 
-        }
-        gltf_obj.main_scene = gltf_obj.scenes[json["scene"].asString()];
-    } else {
-        printf("Failed to prase gltf\n");
-        printf("What is the main scene idx is a key\n");
-        exit(-1);
-    }
-    
-    
-    GltfNode main_node = gltf_obj.nodes[gltf_obj.main_scene.nodes[0]];
+    GltfNode main_node = gltf_obj.nodes[gltf_obj.main_scene.nodes[gltf_obj.main_scene_idx]];
     parse_node(main_node);
 }
 

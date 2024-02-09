@@ -1,7 +1,14 @@
 #include "pch.hpp"
 
+#include "my_gui.hpp"
+#include "utils.hpp"
+#include "gltf_loader.hpp"
+#include "mesh.hpp"
+#include "shader.hpp"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
 
 
 #define WIDTH 800
@@ -53,13 +60,9 @@ int main() {
     if(glfw_init() == -1) { return -1; }
     imgui_init(window);
 
-
-    GltfLoader gltf_loader("assets/box_indices/box.gltf","assets/box_indices/Box0.bin");
+    GltfLoader gltf_loader("assets/box_indices/box.gltf");
     Shader shader("./shader.vert","./shader.frag");
     Mesh mesh(gltf_loader.vertices,gltf_loader.normals,gltf_loader.indices);
-
-
-
 
     glm::vec3 rotation(0.);
     glm::mat4x4 rotation_mat(1.);

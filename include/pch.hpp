@@ -27,11 +27,5 @@
 #include "stb_image.h"
 
 
-// my classes
-#include "utils.hpp"
-#include "shader.hpp"
-#include "mesh.hpp"
-#include "gltf_loader.hpp"
-#include "my_gui.hpp"
 
 #endif
