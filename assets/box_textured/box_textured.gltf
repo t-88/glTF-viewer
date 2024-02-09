@@ -280,7 +280,7 @@
                 },
                 "modelViewMatrix": {
                     "semantic": "MODELVIEW",
-                    "type": 35676
+                    "type": 35678
                 },
                 "normal": {
                     "semantic": "NORMAL",

@@ -55,8 +55,11 @@ int glfw_init() {
 
     return 0;
 }
+int main() { 
+    GltfLoader gltf_loader("assets/box_textured/box_textured.gltf");
+}
 
-int main() {
+int main1() {
     if(glfw_init() == -1) { return -1; }
     imgui_init(window);
 

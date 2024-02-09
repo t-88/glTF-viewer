@@ -265,16 +265,16 @@ void GltfLoader::parse_scenes_and_main_scene() {
 }
 
 
-void GltfLoader::load_textures() {
+void GltfLoader::load_textures_data() {
     if(json["images"].isArray()) {  
         for (int i = 0; i < json["images"].size(); i++) {
             std::string uri = gltf_obj.dir_path + json["images"][i]["uri"].asString();
         
 
-            GltfTexture texture;
-            uint8_t* data =  stbi_load(uri.c_str(),&texture.w,&texture.h,0,3);
-            texture.data =  std::vector<uint8_t>(data,data + texture.w * texture.h * 3);
-            gltf_obj.textures[std::to_string(i)] = texture;
+            GltfTextureData texture_data;
+            uint8_t* data =  stbi_load(uri.c_str(),&texture_data.w,&texture_data.h,0,3);
+            texture_data.data =  std::vector<uint8_t>(data,data + texture_data.w * texture_data.h * 3);
+            gltf_obj.textures_data[std::to_string(i)] = texture_data;
 
             stbi_image_free(data);
         }
@@ -284,15 +284,17 @@ void GltfLoader::load_textures() {
             std::string uri = gltf_obj.dir_path + json["images"][key]["uri"].asString();
 
 
-            GltfTexture texture;
-            uint8_t* data =  stbi_load(uri.c_str(),&texture.w,&texture.h,0,3);
-            texture.data =  std::vector<uint8_t>(data,data + texture.w * texture.h * 3);
-            gltf_obj.textures[key] = texture;
+            GltfTextureData texture_data;
+            uint8_t* data =  stbi_load(uri.c_str(),&texture_data.w,&texture_data.h,0,3);
+            texture_data.data =  std::vector<uint8_t>(data,data + texture_data.w * texture_data.h * 3);
+            gltf_obj.textures_data[key] = texture_data;
 
             stbi_image_free(data);
         }
     }
 }
+
+
 
 
 GltfLoader::GltfLoader(const char *gltf_path)
@@ -304,31 +306,50 @@ GltfLoader::GltfLoader(const char *gltf_path)
 
 
 
-
-    // parsing
-
-    // meshes
     parse_meshes();   
-
-    // nodes
     parse_nodes();
-
-    // accessors
     parse_accessor();
-
-
-    // buffer views
     parse_buffer_views();
-
-    // buffers
     parse_and_load_buffers(gltf_path);
-
-
-    //scenes
     parse_scenes_and_main_scene();
+    load_textures_data();
+
+    // textures
+    for (int i = 0; i < json["textures"].size(); i++) {
+        std::string key = json["textures"].getMemberNames()[i];
+        GltfTexture texture;
+        texture.sampler = gltf_obj.dir_path + json["textures"][key]["sampler"].asString();
+        texture.source = gltf_obj.dir_path + json["textures"][key]["source"].asString();
+        gltf_obj.textures[key] = texture;
+    }
+
+    // material
+    for (int i = 0; i < json["materials"].size(); i++) {
+        std::string key = json["materials"].getMemberNames()[i];
+        GltfMaterial material;
+        material.diffuse = json["materials"][key]["values"]["diffuse"].asString();
+        material.shininess = json["materials"][key]["values"]["shininess"].asInt();
+        for (int i = 0; i < json["materials"][key]["values"]["specular"].size(); i++) {
+            material.specular.push_back(json["materials"][key]["values"]["specular"][i].asFloat());
+        }
+
+        gltf_obj.materials[key] = material;
+    }
+
+    // programs
+    for (int i = 0; i < json["programs"].size(); i++) {
+        std::string key = json["materials"].getMemberNames()[i];
+
+        GltfProgram program;
+        program.vert =  gltf_obj.dir_path + json["shaders"][json["materials"][key]["vertexShader"].asString()].asString();
+        program.frag = gltf_obj.dir_path +  json["shaders"][json["materials"][key]["fragmentShader"].asString()].asString();
+
+        gltf_obj.programs[key] = program;
+    }
+
     
-    // textures 
-    load_textures();
+    
+    return;
 
     GltfNode main_node = gltf_obj.nodes[gltf_obj.main_scene.nodes["0"]];
     parse_node(main_node);

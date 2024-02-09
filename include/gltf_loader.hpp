@@ -48,9 +48,29 @@ struct GltfBufferView {
     }    
 };
 
-struct GltfTexture {
+struct GltfTextureData {
     std::vector<uint8_t> data;
     int w , h;
+};
+struct GltfTexture {
+    std::string sampler;
+    std::string source;
+    GltfTexture() {
+        sampler = "";
+        source = "";
+    }
+};
+
+struct GltfMaterial {
+    std::string diffuse = "";
+    int shininess = 0;
+    std::vector<float> specular;
+    std::string technique_idx =  "";    
+};
+
+struct GltfProgram {
+    std::string frag;
+    std::string vert;
 };
 
 struct GltfObj {
@@ -62,11 +82,14 @@ struct GltfObj {
     std::map<std::string,GltfMesh> meshes;
     std::map<std::string,GltfAccessor> accessors;
     std::map<std::string,GltfBufferView> buffer_views;
+    std::map<std::string,GltfTexture> textures;
+    std::map<std::string,GltfMaterial> materials;
+    std::map<std::string,GltfProgram> programs;
 
 
     std::string dir_path;
     std::map<std::string,std::vector<char>> buffers;
-    std::map<std::string,GltfTexture> textures;
+    std::map<std::string,GltfTextureData> textures_data;
 
 
 };
@@ -92,7 +115,7 @@ public:
     void parse_and_load_buffers(std::string gltf_path);
     void extract_dir_path(std::string gltf_path);
     void parse_scenes_and_main_scene();
-    void load_textures();
+    void load_textures_data();
 
 
 
