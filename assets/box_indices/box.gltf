@@ -3,6 +3,8 @@
         "generator": "COLLADA2GLTF",
         "version": "2.0"
     },
+
+
     "scene": 0,
     "scenes": [
         {
@@ -39,9 +41,6 @@
             "mesh": 0
         }
     ],
-
-
-    
     "meshes": [
         {
             "primitives": [
@@ -107,6 +106,9 @@
             "type": "VEC3"
         }
     ],
+
+
+    
     "materials": [
         {
             "pbrMetallicRoughness": {

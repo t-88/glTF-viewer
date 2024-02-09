@@ -54,7 +54,7 @@ int main() {
     imgui_init(window);
 
 
-    GltfLoader gltf_loader("assets/box.gltf","assets/Box0.bin");
+    GltfLoader gltf_loader("assets/box_indices/box.gltf","assets/box_indices/Box0.bin");
     Shader shader("./shader.vert","./shader.frag");
     Mesh mesh(gltf_loader.vertices,gltf_loader.normals,gltf_loader.indices);
 
