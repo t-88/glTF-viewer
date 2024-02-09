@@ -1,4 +1,5 @@
 #include "gltf_loader.hpp"
+#include "stb_image.h"
 
 void GltfLoader::parse_node(GltfNode node) {
     if(node.mesh_idx.size() != 0) {
@@ -111,7 +112,6 @@ void GltfLoader::parse_nodes() {
             } 
 
             gltf_obj.nodes[key] = node;
-            printf("    -> %s\n",gltf_obj.nodes[key].mesh_idx.c_str());
         }
     }
 }
@@ -165,6 +165,7 @@ void GltfLoader::parse_buffer_views() {
         }        
     }
 }
+
 void GltfLoader::parse_and_load_buffers(std::string gltf_path) {
     extract_dir_path(gltf_path);
 
@@ -197,6 +198,8 @@ void GltfLoader::parse_and_load_buffers(std::string gltf_path) {
         }
     }
 }
+
+
 void GltfLoader::extract_dir_path(std::string gltf_path) {
     // buffers only supports bin files
     // get gltf dir, needed when handling buffers
@@ -236,6 +239,39 @@ void GltfLoader::parse_scenes_and_main_scene() {
 
 }
 
+
+void GltfLoader::load_textures() {
+    if(json["images"].isArray()) {  
+        for (int i = 0; i < json["images"].size(); i++) {
+            std::string uri = gltf_obj.dir_path + json["images"][i]["uri"].asString();
+        
+            int w ,h;
+            uint8_t* data =  stbi_load(uri.c_str(),&w,&h,0,3);
+            std::vector<uint8_t> data_vec(data,data + w * h *3);
+            gltf_obj.textures[std::to_string(i)] = data_vec;
+
+            stbi_image_free(data);
+        }
+    } else {
+        for (int i = 0; i < json["images"].size(); i++) {
+            std::string key = json["images"].getMemberNames()[i];
+            std::string uri = gltf_obj.dir_path + json["images"][key]["uri"].asString();
+
+            int w ,h;
+            uint8_t* data =  stbi_load(uri.c_str(),&w,&h,0,3);
+            std::vector<uint8_t> data_vec(data,data + w * h *3);
+            gltf_obj.textures[key] = data_vec;
+
+            stbi_image_free(data);
+
+        }
+    }
+}
+void GltfLoader::parse_textures_coords() { 
+
+}
+
+
 GltfLoader::GltfLoader(const char *gltf_path)
 {
     // reading the gltf and bin files
@@ -268,6 +304,9 @@ GltfLoader::GltfLoader(const char *gltf_path)
     //scenes
     parse_scenes_and_main_scene();
     
+    // textures 
+    load_textures();
+    parse_textures_coords();
 
     GltfNode main_node = gltf_obj.nodes[gltf_obj.main_scene.nodes["0"]];
     parse_node(main_node);

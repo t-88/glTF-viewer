@@ -61,6 +61,9 @@ struct GltfObj {
 
     std::string dir_path;
     std::map<std::string,std::vector<char>> buffers;
+    std::map<std::string,std::vector<uint8_t>> textures;
+
+
 };
 
 
@@ -83,7 +86,8 @@ public:
     void parse_and_load_buffers(std::string gltf_path);
     void extract_dir_path(std::string gltf_path);
     void parse_scenes_and_main_scene();
-
+    void load_textures();
+    void parse_textures_coords();
 
 
 
