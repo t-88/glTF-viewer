@@ -55,17 +55,13 @@ int glfw_init() {
 
     return 0;
 }
-int main() { 
-    GltfLoader gltf_loader("assets/box_indices/box.gltf");
-    return 0;
-}
 
-int main1() {
+int main() {
     if(glfw_init() == -1) { return -1; }
     imgui_init(window);
 
 
-    GltfLoader gltf_loader("assets/box_textured/box_textured.gltf");
+    GltfLoader gltf_loader("assets/box_indices/box.gltf");
     Shader shader("./shader.vert","./shader.frag");
     Mesh mesh(gltf_loader);
 

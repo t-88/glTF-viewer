@@ -5,6 +5,7 @@
 static char shader_log[512];
 static int shader_status;
 
+Shader::Shader() {}
 Shader::Shader(std::string vert_path, std::string frag_path) {
     vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     auto vertex_src_str =  load_file_src(vert_path.c_str());

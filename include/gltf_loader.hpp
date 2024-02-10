@@ -73,6 +73,11 @@ struct GltfProgram {
     std::string vert;
 };
 
+struct GltfTechnique {
+    std::map<std::string,std::string> uniforms;
+};
+
+
 struct GltfObj {
     std::string main_scene_idx;
     GltfScene main_scene;
@@ -85,6 +90,7 @@ struct GltfObj {
     std::map<std::string,GltfTexture> textures;
     std::map<std::string,GltfMaterial> materials;
     std::map<std::string,GltfProgram> programs;
+    std::map<std::string,GltfTechnique> techniques;
 
 
     std::string dir_path;

@@ -12,6 +12,7 @@ private:
     uint32_t fragment_shader;
 
 public:
+    Shader();
     Shader(std::string,std::string);
     ~Shader();
 

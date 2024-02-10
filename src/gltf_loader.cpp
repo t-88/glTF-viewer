@@ -316,8 +316,8 @@ GltfLoader::GltfLoader(const char *gltf_path)
     parse_scenes_and_main_scene();
     load_textures_data();
 
+    // textures
     if(json.isMember("textures")) {
-        // textures
         for (int i = 0; i < json["textures"].size(); i++) {
             std::string key = json["textures"].getMemberNames()[i];
             GltfTexture texture;
@@ -326,8 +326,8 @@ GltfLoader::GltfLoader(const char *gltf_path)
             gltf_obj.textures[key] = texture;
         }
     }
+    // material
     if(json.isMember("materials")) {
-        // material
         if(json["materials"].isArray()) {
 
         } else {
@@ -340,13 +340,15 @@ GltfLoader::GltfLoader(const char *gltf_path)
                     material.specular.push_back(json["materials"][key]["values"]["specular"][i].asFloat());
                 }
 
+                material.technique_idx = json["materials"][key]["technique"].asString();
+
                 gltf_obj.materials[key] = material;
             }
         }
        
     }
+    // programs 
     if(json.isMember("programs")){
-        // programs 
         for (int i = 0; i < json["programs"].size(); i++) {
             std::string key = json["programs"].getMemberNames()[i];
 
@@ -359,6 +361,21 @@ GltfLoader::GltfLoader(const char *gltf_path)
     }
 
     
+    if(json.isMember("techniques")) {
+        for (int i = 0; i < json["techniques"].size(); i++) {
+            std::string key = json["techniques"].getMemberNames()[i];
+            GltfTechnique technique;
+
+            if(json["techniques"][key].isMember("uniforms")) {
+                for (int j = 0; j < json["techniques"][key]["uniforms"].size(); j++) {
+                    std::string u_key = json["techniques"][key]["uniforms"].getMemberNames()[j];
+                    technique.uniforms[u_key] = json["techniques"][key]["uniforms"][u_key].asString();
+                }
+            }
+
+            gltf_obj.techniques[key] = technique;
+        }
+    }
     
     GltfNode main_node = gltf_obj.nodes[gltf_obj.main_scene.nodes["0"]];
     parse_node(main_node);

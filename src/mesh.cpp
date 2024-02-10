@@ -24,15 +24,17 @@ Mesh::Mesh(std::vector<float> _vertices, std::vector<uint16_t> _indices)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
-
-
 Mesh::Mesh(GltfLoader gltf_loader) {
+    setup_transformations();
+    setup_shader(gltf_loader);
+
+   
+
     setup_vertices(gltf_loader.vertices,gltf_loader.normals,gltf_loader.indices);
     setup_textures(gltf_loader.textures);
 }
-Mesh::~Mesh() {}
-
-
+Mesh::~Mesh() {
+}
 
 void Mesh::setup_vertices(std::vector<float> _vertices,std::vector<float> _normals, std::vector<uint16_t> _indices)  {
     vertices = _vertices;
@@ -83,8 +85,52 @@ void Mesh::setup_textures(std::vector<std::vector<float>> textures) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
+void Mesh::setup_shader(GltfLoader gltf_loader) {
+    // TODO: its just temp for now, plz remove it 
+    #define WIDTH 800
+    #define GUI_WIDTH 200
+    #define SCENE_WIDTH (WIDTH - GUI_WIDTH)
+    #define HEIGHT 600
+    
+    glm::mat4 model = translation_mat * rotation_mat * scale_mat;
+    glm::mat4 view = glm::mat4(1.);
+    glm::mat4 proj = glm::perspective(glm::radians(45.f),(float)SCENE_WIDTH/HEIGHT,0.1f,100.f);
+        
+    
+    // no program provided
+    if(gltf_loader.gltf_obj.programs.size() == 0) {
+        shader = Shader("./template_shader.vert","./template_shader.frag");
+        shader.enable();
+        shader.set_mat4x4("proj",glm::value_ptr(proj));
+        shader.set_mat4x4("view",glm::value_ptr(view));
+        shader.set_mat4x4("model",glm::value_ptr(model));
+        return;
+    } 
+    
+    std::vector<std::string> keys;
+    for (const auto& [key , _] : gltf_loader.gltf_obj.programs)
+        keys.push_back(key);
+    
+    shader = Shader( gltf_loader.gltf_obj.programs[keys[0]].vert.c_str(), gltf_loader.gltf_obj.programs[keys[0]].frag.c_str());
+    
+    auto model_view_mat =  view * model;
+    auto normal_mat =  glm::transpose(glm::inverse(model));
 
 
+    shader.enable();
+    shader.set_mat4x4("u_normalMatrix",glm::value_ptr(normal_mat));
+    shader.set_mat4x4("u_modelViewMatrix",glm::value_ptr(model_view_mat));
+    shader.set_mat4x4("u_projectionMatrix",glm::value_ptr(proj));
+}
+
+void Mesh::setup_transformations() {
+    rotation = glm::vec3(0.);
+    rotation_mat = glm::mat4x4(1.);
+    scale =glm::vec3(0.25);
+    scale_mat = glm::scale(glm::mat4x4(1.),scale);
+    translate = glm::vec3(0.,0.,-1.);
+    translation_mat = glm::translate(glm::mat4x4(1.),translate);
+}
 void Mesh::render() {
     glBindVertexArray(vao);
 
