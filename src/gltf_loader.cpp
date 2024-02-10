@@ -35,13 +35,13 @@ void GltfLoader::parse_node(GltfNode node) {
         if(mesh.texture_idx.size() != 0) {
             GltfAccessor texture_accessor = gltf_obj.accessors[mesh.texture_idx[0]];
             GltfBufferView texture_buffer_view = gltf_obj.buffer_views[texture_accessor.buffer_view_idx];
-            uint16_t* texture_buf = (uint16_t*)(gltf_obj.buffers[texture_buffer_view.buffer_idx].data() + texture_accessor.byte_offset + texture_buffer_view.byte_offset); 
-            std::vector<float> texture;
+            float* texture_buf = (float*)(gltf_obj.buffers[texture_buffer_view.buffer_idx].data() + texture_accessor.byte_offset + texture_buffer_view.byte_offset); 
+            std::vector<float> uv_coord;
             for (size_t i = 0; i < texture_accessor.count; i++) {
-                texture.push_back(texture_buf[2 * i + 0]);
-                texture.push_back(texture_buf[2 * i + 1]);
+                uv_coord.push_back(texture_buf[2 * i + 0]);
+                uv_coord.push_back(texture_buf[2 * i + 1]);
             }            
-            textures.push_back(texture);
+            uv_coords.push_back(uv_coord);
         }
     }
 
@@ -318,63 +318,51 @@ GltfLoader::GltfLoader(const char *gltf_path)
 
     // textures
     if(json.isMember("textures")) {
-        for (int i = 0; i < json["textures"].size(); i++) {
-            std::string key = json["textures"].getMemberNames()[i];
-            GltfTexture texture;
-            texture.sampler = gltf_obj.dir_path + json["textures"][key]["sampler"].asString();
-            texture.source = gltf_obj.dir_path + json["textures"][key]["source"].asString();
-            gltf_obj.textures[key] = texture;
+        if(json["textures"].isArray()) {
+            for (int i = 0; i < json["textures"].size(); i++) {
+                GltfTexture texture;
+                texture.sampler = gltf_obj.dir_path + json["textures"][i]["sampler"].asString();
+                texture.source = gltf_obj.dir_path + json["textures"][i]["source"].asString();
+                gltf_obj.textures[std::to_string(i)] = texture;
+            }            
+        } else {
+            for (int i = 0; i < json["textures"].size(); i++) {
+                std::string key = json["textures"].getMemberNames()[i];
+                GltfTexture texture;
+                texture.sampler = gltf_obj.dir_path + json["textures"][key]["sampler"].asString();
+                texture.source = gltf_obj.dir_path + json["textures"][key]["source"].asString();
+                gltf_obj.textures[key] = texture;
+            }
         }
     }
+
     // material
     if(json.isMember("materials")) {
         if(json["materials"].isArray()) {
-
-        } else {
             for (int i = 0; i < json["materials"].size(); i++) {
-                std::string key = json["materials"].getMemberNames()[i];
-                GltfMaterial material;
-                material.diffuse = json["materials"][key]["values"]["diffuse"].asString();
-                material.shininess = json["materials"][key]["values"]["shininess"].asInt();
-                for (int i = 0; i < json["materials"][key]["values"]["specular"].size(); i++) {
-                    material.specular.push_back(json["materials"][key]["values"]["specular"][i].asFloat());
-                }
-
-                material.technique_idx = json["materials"][key]["technique"].asString();
-
-                gltf_obj.materials[key] = material;
-            }
-        }
-       
-    }
-    // programs 
-    if(json.isMember("programs")){
-        for (int i = 0; i < json["programs"].size(); i++) {
-            std::string key = json["programs"].getMemberNames()[i];
-
-            GltfProgram program;
-            program.vert =  gltf_obj.dir_path + json["shaders"][json["programs"][key]["vertexShader"].asString()]["uri"].asString();
-            program.frag = gltf_obj.dir_path +  json["shaders"][json["programs"][key]["fragmentShader"].asString()]["uri"].asString();
-
-            gltf_obj.programs[key] = program;
-        }
-    }
-
-    
-    if(json.isMember("techniques")) {
-        for (int i = 0; i < json["techniques"].size(); i++) {
-            std::string key = json["techniques"].getMemberNames()[i];
-            GltfTechnique technique;
-
-            if(json["techniques"][key].isMember("uniforms")) {
-                for (int j = 0; j < json["techniques"][key]["uniforms"].size(); j++) {
-                    std::string u_key = json["techniques"][key]["uniforms"].getMemberNames()[j];
-                    technique.uniforms[u_key] = json["techniques"][key]["uniforms"][u_key].asString();
+                GltfMaterial mat;
+                // NOTE: in pbr i am not using metallicRoughnessTexture
+                if(json["materials"][i].isMember("pbrMetallicRoughness")) {
+                    if(json["materials"][i]["pbrMetallicRoughness"].isMember("baseColorFactor")) {
+                        for (int j = 0; j < 4; j++) {
+                            mat.pbr_mat.base_color[i] = json["materials"][i]["pbrMetallicRoughness"]["baseColorFactor"][j].asFloat(); 
+                        }
+                    }
+                    if(json["materials"][i]["pbrMetallicRoughness"].isMember("baseColorTexture")) { 
+                        mat.pbr_mat.texture["index"] = json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"]["index"].asInt();
+                        if(json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"].isMember("texCoord")) {
+                            mat.pbr_mat.texture["texCoord"] = json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"]["texCoord"].asInt();
+                        }
+                    }
+                    if(json["materials"][i]["pbrMetallicRoughness"].isMember("metallicFactor")) { 
+                        mat.pbr_mat.metallic_factor = json["materials"][i]["pbrMetallicRoughness"]["metallicFactor"].asFloat();
+                    }
+                    if(json["materials"][i]["pbrMetallicRoughness"].isMember("roughnessFactor")) { 
+                        mat.pbr_mat.roughness_factor = json["materials"][i]["pbrMetallicRoughness"]["roughnessFactor"].asFloat();
+                    }
                 }
             }
-
-            gltf_obj.techniques[key] = technique;
-        }
+        } 
     }
     
     GltfNode main_node = gltf_obj.nodes[gltf_obj.main_scene.nodes["0"]];

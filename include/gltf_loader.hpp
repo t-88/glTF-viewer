@@ -61,11 +61,23 @@ struct GltfTexture {
     }
 };
 
+struct GltfPBRMaterial {
+    std::array<float,4> base_color = {1,1,1,1};
+    float metallic_factor = 1; 
+    float roughness_factor = 1; 
+    std::map<std::string,int> texture;
+    GltfPBRMaterial() {
+        texture["index"] = -1;
+        texture["texCoord"] = 0;
+    }
+};
 struct GltfMaterial {
     std::string diffuse = "";
     int shininess = 0;
     std::vector<float> specular;
-    std::string technique_idx =  "";    
+    std::string technique_idx =  "";
+
+    GltfPBRMaterial pbr_mat;
 };
 
 struct GltfProgram {
@@ -107,7 +119,7 @@ public:
     std::vector<float> vertices;
     std::vector<uint16_t> indices;
     std::vector<float> normals;
-    std::vector<std::vector<float>> textures;
+    std::vector<std::vector<float>> uv_coords;
 
 
     GltfObj gltf_obj;

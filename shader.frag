@@ -2,7 +2,11 @@
 out vec4 FragColor;
 
 in vec3 F_normal;
+in vec2 F_tex_coord;
 
+
+
+uniform sampler2D text;
 uniform vec3 light_dir;
 
 void main() {
@@ -14,5 +18,5 @@ void main() {
     vec3 diffuse = vec3(intensity, intensity, intensity);
     vec3 color = vec3(0.6,0.8,0.2);
 
-    FragColor = vec4((diffuse + ambient) * color, 1.0f);
-};  
+    FragColor =  vec4(diffuse + ambient,1) * texture(text,F_tex_coord); 
+}

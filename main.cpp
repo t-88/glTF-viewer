@@ -57,38 +57,14 @@ int glfw_init() {
 }
 
 int main() {
+
+
     if(glfw_init() == -1) { return -1; }
     imgui_init(window);
+    stbi_set_flip_vertically_on_load(true);
 
-
-    GltfLoader gltf_loader("assets/box_indices/box.gltf");
-    Shader shader("./shader.vert","./shader.frag");
+    GltfLoader gltf_loader("assets/box_textured/BoxTextured.gltf");
     Mesh mesh(gltf_loader);
-
-    glm::vec3 rotation(0.);
-    glm::mat4x4 rotation_mat(1.);
-
-    glm::vec3 scale(0.25);
-    glm::mat4x4 scale_mat = glm::scale(glm::mat4x4(1.),scale);
-    
-    glm::vec3 translate(0.);
-    translate.z = -1;
-    glm::mat4x4 translation_mat(1.);
-    translation_mat = glm::translate(translation_mat,translate);
-
-
-
-    glm::mat4 model = translation_mat * rotation_mat * scale_mat;
-    glm::mat4 view = glm::mat4(1.);
-    glm::mat4 proj = glm::perspective(glm::radians(45.f),(float)SCENE_WIDTH/HEIGHT,0.1f,100.f);
-    
-    glm::vec3 light_dir = glm::vec3(0,0,1.);
-
-    shader.enable();
-    shader.set_mat4x4("proj",glm::value_ptr(proj));
-    shader.set_mat4x4("view",glm::value_ptr(view));
-    shader.set_mat4x4("model",glm::value_ptr(model));
-    shader.set_vec3("light_dir",std::vector<float>{ light_dir.x,light_dir.y,light_dir.z });
 
 
     glEnable(GL_DEPTH_TEST);
@@ -100,7 +76,7 @@ int main() {
         }
 
 
-        shader.enable();
+        mesh.shader.enable();
         mesh.render();      
 
         {
@@ -112,29 +88,29 @@ int main() {
 
 
                 ImGui::Text("Transalte:");
-                bool translate_updated = MyGui::InputFloat3WithScroll("##translation",&translate[0],0.1);
+                bool translate_updated = MyGui::InputFloat3WithScroll("##translation",&mesh.translate[0],0.1);
                 if(translate_updated) {
-                    translation_mat = glm::translate(glm::mat4x4(1.),translate);
+                    mesh.translation_mat = glm::translate(glm::mat4x4(1.),mesh.translate);
                 }    
 
                 ImGui::Text("Rotation:");
-                bool rotation_updated = MyGui::InputFloat3WithScroll("##rotation",&rotation[0],5);
+                bool rotation_updated = MyGui::InputFloat3WithScroll("##rotation",&mesh.rotation[0],5);
                 if(rotation_updated) {
-                    rotation_mat = glm::rotate(glm::mat4x4(1.),glm::radians(rotation.x),glm::vec3(1.,0.,0.));
-                    rotation_mat = glm::rotate(rotation_mat,glm::radians(rotation.y),glm::vec3(0.,1.,0.));
-                    rotation_mat = glm::rotate(rotation_mat,glm::radians(rotation.z),glm::vec3(0.,0.,1.));
+                    mesh.rotation_mat = glm::rotate(glm::mat4x4(1.),glm::radians(mesh.rotation.x),glm::vec3(1.,0.,0.));
+                    mesh.rotation_mat = glm::rotate(mesh.rotation_mat,glm::radians(mesh.rotation.y),glm::vec3(0.,1.,0.));
+                    mesh.rotation_mat = glm::rotate(mesh.rotation_mat,glm::radians(mesh.rotation.z),glm::vec3(0.,0.,1.));
                 }
                 ImGui::Text("Scale:");
-                bool scale_updated = MyGui::InputFloat3WithScroll("##scaling",&scale[0]);
+                bool scale_updated = MyGui::InputFloat3WithScroll("##scaling",&mesh.scale[0]);
                 if(scale_updated) {
-                    scale_mat = glm::scale(glm::mat4x4(1.),scale);
+                    mesh.scale_mat = glm::scale(glm::mat4x4(1.),mesh.scale);
                 }      
 
                 if(translate_updated || rotation_updated || scale_updated) {
-                    model = glm::mat4(1.);
-                    model = translation_mat * rotation_mat * scale_mat; 
-                    shader.enable();
-                    shader.set_mat4x4("model",glm::value_ptr(model));
+                    auto model = glm::mat4(1.);
+                    model = mesh.translation_mat * mesh.rotation_mat * mesh.scale_mat; 
+                    mesh.shader.enable();
+                    mesh.shader.set_mat4x4("model",glm::value_ptr(model));
                 }          
 
 
@@ -152,7 +128,8 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
     
-    shader.free();
+
+    mesh.shader.free();
     glfwDestroyWindow(window);
     glfwTerminate();
 
