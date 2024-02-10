@@ -1,8 +1,8 @@
 #include "mesh.hpp"
 
+
 Mesh::Mesh(std::vector<float> _vertices, std::vector<uint16_t> _indices)
 {
-    
     vertices = _vertices;
     indices = _indices;
 
@@ -26,8 +26,15 @@ Mesh::Mesh(std::vector<float> _vertices, std::vector<uint16_t> _indices)
 }
 
 
-Mesh::Mesh(std::vector<float> _vertices,std::vector<float> _normals, std::vector<uint16_t> _indices,std::vector<std::vector<float>> textures)
-{
+Mesh::Mesh(GltfLoader gltf_loader) {
+    setup_vertices(gltf_loader.vertices,gltf_loader.normals,gltf_loader.indices);
+    setup_textures(gltf_loader.textures);
+}
+Mesh::~Mesh() {}
+
+
+
+void Mesh::setup_vertices(std::vector<float> _vertices,std::vector<float> _normals, std::vector<uint16_t> _indices)  {
     vertices = _vertices;
     normals = _normals;
     indices = _indices;
@@ -41,8 +48,6 @@ Mesh::Mesh(std::vector<float> _vertices,std::vector<float> _normals, std::vector
         buffer.push_back(normals[3 * i + 1]);        
         buffer.push_back(normals[3 * i + 2]);     
     }
-    
-
 
 
     glGenVertexArrays(1, &vao);
@@ -66,8 +71,8 @@ Mesh::Mesh(std::vector<float> _vertices,std::vector<float> _normals, std::vector
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
-
+}
+void Mesh::setup_textures(std::vector<std::vector<float>> textures) {
     uint texture0;
     glGenTextures(1,&texture0);
     glBindTexture(GL_TEXTURE_2D,texture0);
@@ -76,16 +81,9 @@ Mesh::Mesh(std::vector<float> _vertices,std::vector<float> _normals, std::vector
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,)
-
-
-
 }
 
 
-
-Mesh::~Mesh() {}
 
 void Mesh::render() {
     glBindVertexArray(vao);

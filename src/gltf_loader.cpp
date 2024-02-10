@@ -266,6 +266,8 @@ void GltfLoader::parse_scenes_and_main_scene() {
 
 
 void GltfLoader::load_textures_data() {
+    if(!json.isMember("images")) return;
+
     if(json["images"].isArray()) {  
         for (int i = 0; i < json["images"].size(); i++) {
             std::string uri = gltf_obj.dir_path + json["images"][i]["uri"].asString();
@@ -314,43 +316,50 @@ GltfLoader::GltfLoader(const char *gltf_path)
     parse_scenes_and_main_scene();
     load_textures_data();
 
-    // textures
-    for (int i = 0; i < json["textures"].size(); i++) {
-        std::string key = json["textures"].getMemberNames()[i];
-        GltfTexture texture;
-        texture.sampler = gltf_obj.dir_path + json["textures"][key]["sampler"].asString();
-        texture.source = gltf_obj.dir_path + json["textures"][key]["source"].asString();
-        gltf_obj.textures[key] = texture;
-    }
-
-    // material
-    for (int i = 0; i < json["materials"].size(); i++) {
-        std::string key = json["materials"].getMemberNames()[i];
-        GltfMaterial material;
-        material.diffuse = json["materials"][key]["values"]["diffuse"].asString();
-        material.shininess = json["materials"][key]["values"]["shininess"].asInt();
-        for (int i = 0; i < json["materials"][key]["values"]["specular"].size(); i++) {
-            material.specular.push_back(json["materials"][key]["values"]["specular"][i].asFloat());
+    if(json.isMember("textures")) {
+        // textures
+        for (int i = 0; i < json["textures"].size(); i++) {
+            std::string key = json["textures"].getMemberNames()[i];
+            GltfTexture texture;
+            texture.sampler = gltf_obj.dir_path + json["textures"][key]["sampler"].asString();
+            texture.source = gltf_obj.dir_path + json["textures"][key]["source"].asString();
+            gltf_obj.textures[key] = texture;
         }
-
-        gltf_obj.materials[key] = material;
     }
+    if(json.isMember("materials")) {
+        // material
+        if(json["materials"].isArray()) {
 
-    // programs
-    for (int i = 0; i < json["programs"].size(); i++) {
-        std::string key = json["materials"].getMemberNames()[i];
+        } else {
+            for (int i = 0; i < json["materials"].size(); i++) {
+                std::string key = json["materials"].getMemberNames()[i];
+                GltfMaterial material;
+                material.diffuse = json["materials"][key]["values"]["diffuse"].asString();
+                material.shininess = json["materials"][key]["values"]["shininess"].asInt();
+                for (int i = 0; i < json["materials"][key]["values"]["specular"].size(); i++) {
+                    material.specular.push_back(json["materials"][key]["values"]["specular"][i].asFloat());
+                }
 
-        GltfProgram program;
-        program.vert =  gltf_obj.dir_path + json["shaders"][json["materials"][key]["vertexShader"].asString()].asString();
-        program.frag = gltf_obj.dir_path +  json["shaders"][json["materials"][key]["fragmentShader"].asString()].asString();
+                gltf_obj.materials[key] = material;
+            }
+        }
+       
+    }
+    if(json.isMember("programs")){
+        // programs 
+        for (int i = 0; i < json["programs"].size(); i++) {
+            std::string key = json["materials"].getMemberNames()[i];
 
-        gltf_obj.programs[key] = program;
+            GltfProgram program;
+            program.vert =  gltf_obj.dir_path + json["shaders"][json["materials"][key]["vertexShader"].asString()].asString();
+            program.frag = gltf_obj.dir_path +  json["shaders"][json["materials"][key]["fragmentShader"].asString()].asString();
+
+            gltf_obj.programs[key] = program;
+        }
     }
 
     
     
-    return;
-
     GltfNode main_node = gltf_obj.nodes[gltf_obj.main_scene.nodes["0"]];
     parse_node(main_node);
 }
