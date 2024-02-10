@@ -348,11 +348,11 @@ GltfLoader::GltfLoader(const char *gltf_path)
     if(json.isMember("programs")){
         // programs 
         for (int i = 0; i < json["programs"].size(); i++) {
-            std::string key = json["materials"].getMemberNames()[i];
+            std::string key = json["programs"].getMemberNames()[i];
 
             GltfProgram program;
-            program.vert =  gltf_obj.dir_path + json["shaders"][json["materials"][key]["vertexShader"].asString()].asString();
-            program.frag = gltf_obj.dir_path +  json["shaders"][json["materials"][key]["fragmentShader"].asString()].asString();
+            program.vert =  gltf_obj.dir_path + json["shaders"][json["programs"][key]["vertexShader"].asString()]["uri"].asString();
+            program.frag = gltf_obj.dir_path +  json["shaders"][json["programs"][key]["fragmentShader"].asString()]["uri"].asString();
 
             gltf_obj.programs[key] = program;
         }
