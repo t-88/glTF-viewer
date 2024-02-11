@@ -322,6 +322,57 @@ void GltfLoader::load_textures_data() {
     }
 }
 
+void GltfLoader::parse_materials() {
+// material
+    if(!json.isMember("materials")) return;
+
+    if(json["materials"].isArray()) {
+        for (int i = 0; i < json["materials"].size(); i++) {
+            GltfMaterial mat;
+            // NOTE: in pbr i am not using metallicRoughnessTexture
+            if(json["materials"][i].isMember("pbrMetallicRoughness")) {
+                if(json["materials"][i]["pbrMetallicRoughness"].isMember("baseColorFactor")) {
+                    for (int j = 0; j < 4; j++) {
+                        mat.pbr_mat.base_color[i] = json["materials"][i]["pbrMetallicRoughness"]["baseColorFactor"][j].asFloat(); 
+                    }
+                }
+                if(json["materials"][i]["pbrMetallicRoughness"].isMember("baseColorTexture")) { 
+                    mat.pbr_mat.texture["index"] = json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"]["index"].asInt();
+                    if(json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"].isMember("texCoord")) {
+                        mat.pbr_mat.texture["texCoord"] = json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"]["texCoord"].asInt();
+                    }
+                }
+                if(json["materials"][i]["pbrMetallicRoughness"].isMember("metallicFactor")) { 
+                    mat.pbr_mat.metallic_factor = json["materials"][i]["pbrMetallicRoughness"]["metallicFactor"].asFloat();
+                }
+                if(json["materials"][i]["pbrMetallicRoughness"].isMember("roughnessFactor")) { 
+                    mat.pbr_mat.roughness_factor = json["materials"][i]["pbrMetallicRoughness"]["roughnessFactor"].asFloat();
+                }
+            }
+        }
+    } 
+    
+}
+void  GltfLoader::parse_texture() {
+    // textures
+    if(json.isMember("textures")) return;
+    if(json["textures"].isArray()) {
+        for (int i = 0; i < json["textures"].size(); i++) {
+            GltfTexture texture;
+            texture.sampler = gltf_obj.dir_path + json["textures"][i]["sampler"].asString();
+            texture.source = gltf_obj.dir_path + json["textures"][i]["source"].asString();
+            gltf_obj.textures[std::to_string(i)] = texture;
+        }            
+    } else {
+        for (int i = 0; i < json["textures"].size(); i++) {
+            std::string key = json["textures"].getMemberNames()[i];
+            GltfTexture texture;
+            texture.sampler = gltf_obj.dir_path + json["textures"][key]["sampler"].asString();
+            texture.source = gltf_obj.dir_path + json["textures"][key]["source"].asString();
+            gltf_obj.textures[key] = texture;
+        }
+    }
+}
 
 
 
@@ -342,56 +393,11 @@ GltfLoader::GltfLoader(const char *gltf_path)
     parse_and_load_buffers(gltf_path);
     parse_scenes_and_main_scene();
     load_textures_data();
+    
+    parse_materials();
+    parse_texture();
 
 
-    // textures
-    if(json.isMember("textures")) {
-        if(json["textures"].isArray()) {
-            for (int i = 0; i < json["textures"].size(); i++) {
-                GltfTexture texture;
-                texture.sampler = gltf_obj.dir_path + json["textures"][i]["sampler"].asString();
-                texture.source = gltf_obj.dir_path + json["textures"][i]["source"].asString();
-                gltf_obj.textures[std::to_string(i)] = texture;
-            }            
-        } else {
-            for (int i = 0; i < json["textures"].size(); i++) {
-                std::string key = json["textures"].getMemberNames()[i];
-                GltfTexture texture;
-                texture.sampler = gltf_obj.dir_path + json["textures"][key]["sampler"].asString();
-                texture.source = gltf_obj.dir_path + json["textures"][key]["source"].asString();
-                gltf_obj.textures[key] = texture;
-            }
-        }
-    }
-
-    // material
-    if(json.isMember("materials")) {
-        if(json["materials"].isArray()) {
-            for (int i = 0; i < json["materials"].size(); i++) {
-                GltfMaterial mat;
-                // NOTE: in pbr i am not using metallicRoughnessTexture
-                if(json["materials"][i].isMember("pbrMetallicRoughness")) {
-                    if(json["materials"][i]["pbrMetallicRoughness"].isMember("baseColorFactor")) {
-                        for (int j = 0; j < 4; j++) {
-                            mat.pbr_mat.base_color[i] = json["materials"][i]["pbrMetallicRoughness"]["baseColorFactor"][j].asFloat(); 
-                        }
-                    }
-                    if(json["materials"][i]["pbrMetallicRoughness"].isMember("baseColorTexture")) { 
-                        mat.pbr_mat.texture["index"] = json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"]["index"].asInt();
-                        if(json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"].isMember("texCoord")) {
-                            mat.pbr_mat.texture["texCoord"] = json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"]["texCoord"].asInt();
-                        }
-                    }
-                    if(json["materials"][i]["pbrMetallicRoughness"].isMember("metallicFactor")) { 
-                        mat.pbr_mat.metallic_factor = json["materials"][i]["pbrMetallicRoughness"]["metallicFactor"].asFloat();
-                    }
-                    if(json["materials"][i]["pbrMetallicRoughness"].isMember("roughnessFactor")) { 
-                        mat.pbr_mat.roughness_factor = json["materials"][i]["pbrMetallicRoughness"]["roughnessFactor"].asFloat();
-                    }
-                }
-            }
-        } 
-    }
     
     GltfNode main_node = gltf_obj.nodes[gltf_obj.main_scene.nodes["0"]];
     parse_node(main_node);

@@ -117,6 +117,8 @@ public:
     void parse_accessor();
     void parse_buffer_views();
     void parse_and_load_buffers(std::string gltf_path);
+    void parse_materials();
+    void parse_texture();
     void extract_dir_path(std::string gltf_path);
     void parse_scenes_and_main_scene();
     void load_textures_data();
