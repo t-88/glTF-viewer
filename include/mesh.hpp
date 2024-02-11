@@ -20,6 +20,10 @@ public:
     uint32_t ebo; 
     uint32_t texture0 = -1;
 
+    bool vertices_are_indexed = false;
+    int indices_count = 0;
+    int vertices_count = 0;
+
 
     std::vector<float> vertices;
     std::vector<float> normals;
@@ -38,17 +42,12 @@ public:
 
     
     Mesh(GltfLoader gltf_loader);
-    Mesh(std::vector<float> _vertices,std::vector<uint16_t> _indices);
     ~Mesh();
-    void render();
-
     
-
-    void setup_vertices(std::vector<float> _vertices,std::vector<float> _normals, std::vector<uint16_t> _indices); 
-    void setup_vertices(std::vector<float> _vertices,std::vector<float> _normals,std::vector<float> texture_data, std::vector<uint16_t> _indices);
-
-    void setup_textures(std::map<std::string,GltfTextureData> texture_data);
     void setup_transformations();
     void setup_shader(GltfLoader gltf_loader);
+    void setup_vertices(GltfLoader gltf_loader);
+    void setup_textures(std::map<std::string,GltfTextureData> texture_data);
+    void render();
 
 };

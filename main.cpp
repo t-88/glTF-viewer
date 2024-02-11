@@ -58,14 +58,12 @@ int glfw_init() {
 
 int main() {
 
-
     if(glfw_init() == -1) { return -1; }
     imgui_init(window);
     stbi_set_flip_vertically_on_load(true);
 
-    GltfLoader gltf_loader("assets/box_textured/BoxTextured.gltf");
+    GltfLoader gltf_loader("assets/box_indices/box.gltf");
     Mesh mesh(gltf_loader);
-
 
     glEnable(GL_DEPTH_TEST);
     while (!glfwWindowShouldClose(window)) {
@@ -112,9 +110,6 @@ int main() {
                     mesh.shader.enable();
                     mesh.shader.set_mat4x4("model",glm::value_ptr(model));
                 }          
-
-
-                
 
             ImGui::EndFrame();
             ImGui::Render();

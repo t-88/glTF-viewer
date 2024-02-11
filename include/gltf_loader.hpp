@@ -15,37 +15,23 @@ struct GltfMesh {
 };
 struct GltfNode {
     std::vector<std::string> children;
-    std::string mesh_idx;  
-    GltfNode() {
-        mesh_idx = "";
-    }
+    std::string mesh_idx = "";   
 };
 struct GltfScene {
     std::map<std::string, std::string> nodes;
 };
 
 struct GltfAccessor {
-    std::string buffer_view_idx;
-    int byte_offset;
-    int count;
-
-    GltfAccessor() {
-        count = -1;
-        buffer_view_idx = "";
-        byte_offset = 0;
-    }
+    std::string buffer_view_idx = "";
+    int byte_offset = 0;
+    int count = 0;
 };
 
 struct GltfBufferView {
-    std::string buffer_idx;
-    int byte_offset;
-    int byte_len;
-
-    GltfBufferView() {
-        buffer_idx = "";
-        byte_offset = -1;
-        byte_len = -1;        
-    }    
+    std::string buffer_idx= "";
+    int byte_offset = 0;
+    int byte_len = 0;
+    int byte_stride = 0;
 };
 
 struct GltfTextureData {

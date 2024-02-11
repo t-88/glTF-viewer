@@ -6,26 +6,45 @@ void GltfLoader::parse_node(GltfNode node) {
         GltfMesh mesh = gltf_obj.meshes[node.mesh_idx];
         GltfAccessor pos_accessor = gltf_obj.accessors[mesh.position_idx];
         GltfBufferView pos_buffer_view = gltf_obj.buffer_views[pos_accessor.buffer_view_idx];
-        float* pos_buf = (float*)(gltf_obj.buffers[pos_buffer_view.buffer_idx].data() + pos_accessor.byte_offset + pos_buffer_view.byte_offset); 
+        float* pos_buf = (float*)(gltf_obj.buffers[pos_buffer_view.buffer_idx].data() + 
+                                  pos_accessor.byte_offset + 
+                                  pos_buffer_view.byte_offset); 
+
+        // data is interleaved
+        int stride_offset = 0;
+        if(pos_buffer_view.byte_stride > sizeof(float) * 3) {
+            stride_offset = (pos_buffer_view.byte_stride - sizeof(float) * 3) / sizeof(float);
+        }
         for (size_t i = 0; i < pos_accessor.count; i++) {
-            vertices.push_back(pos_buf[i * 3 + 0]);
-            vertices.push_back(pos_buf[i * 3 + 1]);
-            vertices.push_back(pos_buf[i * 3 + 2]);
+            vertices.push_back(pos_buf[i * 3 + 0 + i * stride_offset]);
+            vertices.push_back(pos_buf[i * 3 + 1 + i * stride_offset]);
+            vertices.push_back(pos_buf[i * 3 + 2 + i * stride_offset]);
         }
 
         GltfAccessor normal_accessor = gltf_obj.accessors[mesh.normal_idx];
         GltfBufferView normal_buffer_view = gltf_obj.buffer_views[normal_accessor.buffer_view_idx];
-        float* normals_buf = (float*)(gltf_obj.buffers[normal_buffer_view.buffer_idx].data() + normal_accessor.byte_offset + normal_buffer_view.byte_offset); 
+        float* normals_buf = (float*)(gltf_obj.buffers[normal_buffer_view.buffer_idx].data() + 
+                                      normal_accessor.byte_offset + 
+                                      normal_buffer_view.byte_offset); 
+        
+        printf("%d %d\n",pos_buffer_view.byte_stride,normal_buffer_view.byte_stride);
+
+        stride_offset = 0;
+        if(normal_buffer_view.byte_stride > sizeof(float) * 3) {
+            stride_offset = (normal_buffer_view.byte_stride - sizeof(float) * 3) / sizeof(float);
+        }
         for (size_t i = 0; i < normal_accessor.count; i++) {
-            normals.push_back(normals_buf[i * 3 + 0]);
-            normals.push_back(normals_buf[i * 3 + 1]);
-            normals.push_back(normals_buf[i * 3 + 2]);
+            normals.push_back(normals_buf[i * 3 + 0 + i * stride_offset]);
+            normals.push_back(normals_buf[i * 3 + 1 + i * stride_offset]);
+            normals.push_back(normals_buf[i * 3 + 2 + i * stride_offset]);
         }
 
         if(mesh.indices_idx.size() != 0) {
             GltfAccessor indices_accessor = gltf_obj.accessors[mesh.indices_idx];
             GltfBufferView indices_buffer_view = gltf_obj.buffer_views[indices_accessor.buffer_view_idx];
-            uint16_t* indices_buf = (uint16_t*)(gltf_obj.buffers[indices_buffer_view.buffer_idx].data() + indices_accessor.byte_offset + indices_buffer_view.byte_offset); 
+            uint16_t* indices_buf = (uint16_t*)(gltf_obj.buffers[indices_buffer_view.buffer_idx].data() + 
+                                                indices_accessor.byte_offset + 
+                                                indices_buffer_view.byte_offset); 
             for (size_t i = 0; i < indices_accessor.count; i++) {
                 indices.push_back(indices_buf[i]);
             }
@@ -98,9 +117,7 @@ void GltfLoader::parse_meshes() {
     }
 
 
-    // for (auto const& it  : gltf_obj.meshes) {
-    //     printf("%s %s %s %s\n",it.first.c_str(),it.second.indices_idx.c_str(), it.second.position_idx.c_str(),it.second.normal_idx.c_str());
-    // }
+
 }
 void GltfLoader::parse_nodes() { 
     if(json["nodes"].isArray()) {
@@ -167,11 +184,16 @@ void GltfLoader::parse_accessor() {
 void GltfLoader::parse_buffer_views() {
     if(json["bufferViews"].isArray()) {  
         for (int i = 0; i < json["bufferViews"].size(); i++) {
+
             GltfBufferView buffer_view;
     
             buffer_view.buffer_idx = json["bufferViews"] [i]["buffer"].asString();
             buffer_view.byte_offset = json["bufferViews"][i]["byteOffset"].asInt();
             buffer_view.byte_len = json["bufferViews"]   [i]["byteLength"].asInt();
+
+            if(json["bufferViews"][i].isMember("byteStride")) {
+                buffer_view.byte_stride = json["bufferViews"][i]["byteStride"].asInt();
+            }
             
             gltf_obj.buffer_views[std::to_string(i)] = buffer_view;
     
@@ -184,6 +206,11 @@ void GltfLoader::parse_buffer_views() {
             buffer_view.buffer_idx = json["bufferViews"] [key]["buffer"].asString();
             buffer_view.byte_offset = json["bufferViews"][key]["byteOffset"].asInt();
             buffer_view.byte_len = json["bufferViews"]   [key]["byteLength"].asInt();
+
+            if(json["bufferViews"][i].isMember("byteStride")) {
+                buffer_view.byte_stride = json["bufferView"][i]["byteStride"].asInt();
+                printf("%d\n",buffer_view.byte_stride);
+            }            
             
             gltf_obj.buffer_views[key] = buffer_view;
     
@@ -312,9 +339,11 @@ GltfLoader::GltfLoader(const char *gltf_path)
     parse_nodes();
     parse_accessor();
     parse_buffer_views();
+    
     parse_and_load_buffers(gltf_path);
     parse_scenes_and_main_scene();
     load_textures_data();
+
 
     // textures
     if(json.isMember("textures")) {

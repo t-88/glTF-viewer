@@ -8,11 +8,11 @@ SHADERS = shader.frag shader.vert
 
 all: main
 	./build/main
-	# rm build/main
+	rm build/main
 	
 
 main: $(OBJS) build/glad.o 
-	g++ main.cpp $(INCLUDES) $(OBJS) glad/src/glad.o -o build/main
+	g++ main.cpp -g $(INCLUDES) $(OBJS) glad/src/glad.o -o build/main
 
 $(PCH_FILE): include/pch.hpp
 	g++ $(HEADERS) include/pch.hpp -o $(PCH_FILE)

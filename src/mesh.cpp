@@ -1,132 +1,21 @@
+#include <assert.h>
 #include "mesh.hpp"
 
 
-Mesh::Mesh(std::vector<float> _vertices, std::vector<uint16_t> _indices)
-{
-    vertices = _vertices;
-    indices = _indices;
-
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ebo);
-
-    glBindVertexArray(vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertices[0]), vertices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
 Mesh::Mesh(GltfLoader gltf_loader) {
     setup_transformations();
     setup_shader(gltf_loader);
-    setup_vertices(gltf_loader.vertices,gltf_loader.normals,gltf_loader.uv_coords[0],gltf_loader.indices);
-    setup_textures(gltf_loader.gltf_obj.textures_data);
+    setup_vertices(gltf_loader);
 }
 Mesh::~Mesh() {}
 
-void Mesh::setup_vertices(std::vector<float> _vertices,std::vector<float> _normals, std::vector<uint16_t> _indices)  {
-    vertices = _vertices;
-    normals = _normals;
-    indices = _indices;
-
-    for (size_t i = 0; i < vertices.size() / 3; i++) {
-        buffer.push_back(vertices[3 * i + 0]);        
-        buffer.push_back(vertices[3 * i + 1]);        
-        buffer.push_back(vertices[3 * i + 2]);        
-        
-        buffer.push_back(normals[3 * i + 0]);        
-        buffer.push_back(normals[3 * i + 1]);        
-        buffer.push_back(normals[3 * i + 2]);     
-    }
-
-
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(buffer[0]), buffer.data(), GL_STATIC_DRAW);
-    
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)( 3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    if(indices.size() != 0) {
-        glGenBuffers(1, &ebo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
-    }
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
-void Mesh::setup_vertices(std::vector<float> _vertices,std::vector<float> _normals,std::vector<float> texture_data, std::vector<uint16_t> _indices)  {
-    vertices = _vertices;
-    normals = _normals;
-    indices = _indices;
-
-    for (size_t i = 0; i < vertices.size() / 3; i++) {
-        buffer.push_back(vertices[3 * i + 0]);        
-        buffer.push_back(vertices[3 * i + 1]);        
-        buffer.push_back(vertices[3 * i + 2]);        
-        
-        buffer.push_back(normals[3 * i + 0]);        
-        buffer.push_back(normals[3 * i + 1]);        
-        buffer.push_back(normals[3 * i + 2]);   
-
-        buffer.push_back(texture_data[2 * i + 0]);  
-        buffer.push_back(texture_data[2 * i + 1]);  
-    }
-
-
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(buffer[0]), buffer.data(), GL_STATIC_DRAW);
-    
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, 0);
-    glEnableVertexAttribArray(0);
-    
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)( 3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)( 6 * sizeof(float)));
-    glEnableVertexAttribArray(2);    
-
-    if(indices.size() != 0) {
-        glGenBuffers(1, &ebo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
-    }
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
-void Mesh::setup_textures(std::map<std::string,GltfTextureData> texture_data) {
-    glGenTextures(1,&texture0);
-    glBindTexture(GL_TEXTURE_2D,texture0);
-
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,texture_data["0"].w,texture_data["0"].h,0,GL_RGB,GL_UNSIGNED_BYTE,texture_data["0"].data.data());
-    glGenerateMipmap(GL_TEXTURE_2D);
+void Mesh::setup_transformations() {
+    rotation = glm::vec3(0.);
+    rotation_mat = glm::mat4x4(1.);
+    scale =glm::vec3(0.25);
+    scale_mat = glm::scale(glm::mat4x4(1.),scale);
+    translate = glm::vec3(0.,0.,-1.);
+    translation_mat = glm::translate(glm::mat4x4(1.),translate);
 }
 void Mesh::setup_shader(GltfLoader gltf_loader) {
     // TODO: its just temp for now, plz remove it 
@@ -150,25 +39,119 @@ void Mesh::setup_shader(GltfLoader gltf_loader) {
 
 
 }
+void Mesh::setup_vertices(GltfLoader gltf)  {
+    vertices_count = gltf.vertices.size();
+    assert(vertices_count != 0 && "mesh dosnt have vertices");
 
-void Mesh::setup_transformations() {
-    rotation = glm::vec3(0.);
-    rotation_mat = glm::mat4x4(1.);
-    scale =glm::vec3(0.25);
-    scale_mat = glm::scale(glm::mat4x4(1.),scale);
-    translate = glm::vec3(0.,0.,-1.);
-    translation_mat = glm::translate(glm::mat4x4(1.),translate);
+
+
+
+    std::vector<float> normals;
+#if false
+    // generate normals if none provided 
+    if(gltf.normals.size() == 0) {
+    // if(true) {
+        for (size_t i = 0; i < (gltf.vertices.size() / 3) / 3; i++) {
+            glm::vec3 a(gltf.vertices[9 * i + 0],gltf.vertices[9 * i + 1],gltf.vertices[9 * i + 2]);
+            glm::vec3 b(gltf.vertices[9 * i + 3],gltf.vertices[9 * i + 4],gltf.vertices[9 * i + 5]);
+            glm::vec3 c(gltf.vertices[9 * i + 6],gltf.vertices[9 * i + 7],gltf.vertices[9 * i + 8]);
+
+            glm::vec3 ab = a - b;
+            glm::vec3 ac = a - c;
+
+            glm::vec3 normal = glm::cross(ab,ac);
+
+            for (size_t i = 0; i < 3; i++) {
+                normals.push_back(normal.x);
+                normals.push_back(normal.y);
+                normals.push_back(normal.z);
+            }
+        }
+    } else {
+        normals = gltf.normals;
+    }
+#endif
+    normals = gltf.normals;
+
+
+    // create a the buffer
+    for (size_t i = 0; i < gltf.vertices.size() / 3; i++) {
+        buffer.push_back(gltf.vertices[3 * i + 0]);        
+        buffer.push_back(gltf.vertices[3 * i + 1]);        
+        buffer.push_back(gltf.vertices[3 * i + 2]);        
+        
+        buffer.push_back(normals[3 * i + 0]);        
+        buffer.push_back(normals[3 * i + 1]);        
+        buffer.push_back(normals[3 * i + 2]);   
+
+        for (size_t j = 0; j < gltf.uv_coords.size(); j++) {
+            buffer.push_back(gltf.uv_coords[j][2 * i + 0]);
+            buffer.push_back(gltf.uv_coords[j][2 * i + 1]);
+        }
+    }
+
+
+    indices = gltf.indices;
+
+    // we count 6 for vertices and normals  
+    int vertex_data_offset = 6;
+    // we add uv_coords
+    vertex_data_offset += 2 * gltf.uv_coords.size(); 
+
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(buffer[0]), buffer.data(), GL_STATIC_DRAW);
+    
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_data_offset, 0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_data_offset, (void*)( 3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // point to the texture uv
+    for (size_t i = 0; i < gltf.uv_coords.size(); i++) {
+        glVertexAttribPointer(2 + i, 2, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_data_offset, (void*)( 6 + (2 * i) * sizeof(float)));
+        glEnableVertexAttribArray(2 + i);    
+    }
+
+    if(indices.size() != 0) {
+        glGenBuffers(1, &ebo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), indices.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
+
+void Mesh::setup_textures(std::map<std::string,GltfTextureData> texture_data) {
+    glGenTextures(1,&texture0);
+    glBindTexture(GL_TEXTURE_2D,texture0);
+
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,texture_data["0"].w,texture_data["0"].h,0,GL_RGB,GL_UNSIGNED_BYTE,texture_data["0"].data.data());
+    glGenerateMipmap(GL_TEXTURE_2D);
+}
+
+
 void Mesh::render() {
     glBindVertexArray(vao);
 
-    if(texture0 != -1) {
-        glBindTexture(GL_TEXTURE_2D,texture0);
-    }
+    // if(texture0 != -1) {
+    //     glBindTexture(GL_TEXTURE_2D,texture0);
+    // }
 
     if(indices.size() != 0) {
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, indices.data());
     } else {
-        glDrawArrays(GL_TRIANGLES,0,vertices.size());
+        glDrawArrays(GL_TRIANGLES,0,vertices_count);
     }
 }

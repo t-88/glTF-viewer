@@ -88,8 +88,8 @@
         },
         {
             "bufferView": 1,
-            "byteOffset": 288,
-            "componentType": 5126,
+            "byteOffset": 12,
+            "componentType": 5126,            
             "count": 24,
             "max": [
                 0.5,
@@ -112,10 +112,8 @@
                     0.0,
                     0.0,
                     1.0
-                ],
-                "metallicFactor": 0.0
-            },
-            "name": "Red"
+                ]
+            }
         }
     ],
     "bufferViews": [
@@ -128,15 +126,15 @@
         {
             "buffer": 0,
             "byteOffset": 0,
-            "byteLength": 576,
-            "byteStride": 12,
+            "byteLength": 576,  
+            "byteStride": 24,                      
             "target": 34962
         }
     ],
     "buffers": [
         {
             "byteLength": 648,
-            "uri": "Box0.bin"
+            "uri": "BoxInterleaved.bin"
         }
     ]
 }
