@@ -56,11 +56,6 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
                 glm::vec3 b(gltf.vertices[9 * i + 3],gltf.vertices[9 * i + 4],gltf.vertices[9 * i + 5]);
                 glm::vec3 c(gltf.vertices[9 * i + 6],gltf.vertices[9 * i + 7],gltf.vertices[9 * i + 8]);
 
-                printf("%ld:\n",i);
-                printf("%f %f %f\n",a.x,a.y,a.z);
-                printf("%f %f %f\n",b.x,b.y,b.z);
-                printf("%f %f %f\n",c.x,c.y,c.z);
-                printf("\n");
 
                 glm::vec3 ab = a - b;
                 glm::vec3 ac = a - c;

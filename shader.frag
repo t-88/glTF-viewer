@@ -17,5 +17,5 @@ void main() {
     vec3 diffuse = vec3(intensity, intensity, intensity);
     vec3 color = vec3(0.6,0.8,0.2);
 
-    FragColor =  texture(text,F_tex_coord) * vec4(diffuse + ambient,1);
+    FragColor =  texture(text,vec2(F_tex_coord.x,F_tex_coord.y)) * vec4(diffuse + ambient,1);
 }
