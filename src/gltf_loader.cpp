@@ -1,5 +1,8 @@
+#include <cmath>
+
 #include "gltf_loader.hpp"
 #include "stb_image.h"
+#include "stb_image_resize.h"
 
 void GltfLoader::parse_node(GltfNode node) {
     if(node.mesh_idx.size() != 0) {
@@ -300,11 +303,23 @@ void GltfLoader::load_textures_data() {
         
 
             GltfTextureData texture_data;
-            uint8_t* data =  stbi_load(uri.c_str(),&texture_data.w,&texture_data.h,0,3);
-            texture_data.data =  std::vector<uint8_t>(data,data + texture_data.w * texture_data.h * 3);
-            gltf_obj.textures_data[std::to_string(i)] = texture_data;
+            uint8_t* img_data =  stbi_load(uri.c_str(),&texture_data.w,&texture_data.h,0,3);
 
-            stbi_image_free(data);
+            int power_of_2_width  = pow(2,ceil(log2(texture_data.w))); 
+            int power_of_2_height = pow(2,ceil(log2(texture_data.h)));
+            if(power_of_2_width != texture_data.w || power_of_2_height != texture_data.h) {
+                uint8_t* resized_img_data = (uint8_t*) malloc(power_of_2_width * power_of_2_height * 3);
+                stbir_resize_uint8(img_data,texture_data.w,texture_data.h,0,resized_img_data,power_of_2_width,power_of_2_height,0,3);
+                texture_data.w = power_of_2_width;
+                texture_data.h = power_of_2_height;
+                
+                stbi_image_free(img_data);
+                img_data = resized_img_data;
+            }
+
+            texture_data.data =  std::vector<uint8_t>(img_data,img_data + texture_data.w * texture_data.h * 3);
+            gltf_obj.textures_data[std::to_string(i)] = texture_data;
+            stbi_image_free(img_data);
         }
     } else {
         for (int i = 0; i < json["images"].size(); i++) {
@@ -313,11 +328,25 @@ void GltfLoader::load_textures_data() {
 
 
             GltfTextureData texture_data;
-            uint8_t* data =  stbi_load(uri.c_str(),&texture_data.w,&texture_data.h,0,3);
-            texture_data.data =  std::vector<uint8_t>(data,data + texture_data.w * texture_data.h * 3);
+            uint8_t* img_data =  stbi_load(uri.c_str(),&texture_data.w,&texture_data.h,0,3);
+
+            int power_of_2_width  = pow(2,ceil(log2(texture_data.w))); 
+            int power_of_2_height = pow(2,ceil(log2(texture_data.h)));
+            if(power_of_2_width != texture_data.w || power_of_2_height != texture_data.h) {
+                uint8_t* resized_img_data = (uint8_t*) malloc(power_of_2_width * power_of_2_height * 3);
+
+                stbir_resize_uint8(img_data,texture_data.w,texture_data.h,0,resized_img_data,power_of_2_width,power_of_2_height,0,3);
+                texture_data.w = power_of_2_width;
+                texture_data.h = power_of_2_height;
+                
+                stbi_image_free(img_data);
+                img_data = resized_img_data;
+            }
+
+            texture_data.data =  std::vector<uint8_t>(img_data,img_data + texture_data.w * texture_data.h * 3);
             gltf_obj.textures_data[key] = texture_data;
 
-            stbi_image_free(data);
+            stbi_image_free(img_data);
         }
     }
 }
