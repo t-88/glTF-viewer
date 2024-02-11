@@ -25,6 +25,9 @@ public:
 
     Shader shader;
 
+    std::vector<uint32_t> texture_idxs;
+    uint32_t texture0;
+
     // transformations
     glm::vec3 rotation;
     glm::mat4x4 rotation_mat;
@@ -40,6 +43,8 @@ public:
     void setup_transformations();
     void setup_shader(GltfLoader gltf_loader);
     void setup_vertices(GltfLoader gltf_loader);
+
+    void setup_textures(GltfTextureData texture_data);
     void setup_textures(std::map<std::string,GltfTextureData> texture_data);
     void render();
 

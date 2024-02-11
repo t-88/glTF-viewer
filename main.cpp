@@ -62,7 +62,7 @@ int main() {
     imgui_init(window);
     stbi_set_flip_vertically_on_load(true);
 
-    GltfLoader gltf_loader("assets/box_indices/box.gltf");
+    GltfLoader gltf_loader("assets/box_textured/BoxTextured.gltf");
     Mesh mesh(gltf_loader);
 
     glEnable(GL_DEPTH_TEST);

@@ -52,7 +52,9 @@ void GltfLoader::parse_node(GltfNode node) {
         if(mesh.texture_idx.size() != 0) {
             GltfAccessor texture_accessor = gltf_obj.accessors[mesh.texture_idx[0]];
             GltfBufferView texture_buffer_view = gltf_obj.buffer_views[texture_accessor.buffer_view_idx];
-            float* texture_buf = (float*)(gltf_obj.buffers[texture_buffer_view.buffer_idx].data() + texture_accessor.byte_offset + texture_buffer_view.byte_offset); 
+            float* texture_buf = (float*)(gltf_obj.buffers[texture_buffer_view.buffer_idx].data() + 
+                                          texture_accessor.byte_offset + 
+                                          texture_buffer_view.byte_offset); 
             std::vector<float> uv_coord;
             for (size_t i = 0; i < texture_accessor.count; i++) {
                 uv_coord.push_back(texture_buf[2 * i + 0]);

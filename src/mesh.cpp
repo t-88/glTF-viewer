@@ -101,7 +101,6 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
         normals = gltf.normals;
     }
 
-
     // create a the buffer
     for (size_t i = 0; i < gltf.vertices.size() / 3; i++) {
         buffer.push_back(gltf.vertices[3 * i + 0]);        
@@ -117,6 +116,7 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
             buffer.push_back(gltf.uv_coords[j][2 * i + 1]);
         }
     }
+
 
 
 
@@ -137,10 +137,12 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_data_offset, (void*)( 3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+
     // point to the texture uv
     for (size_t i = 0; i < gltf.uv_coords.size(); i++) {
-        glVertexAttribPointer(2 + i, 2, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_data_offset, (void*)( 6 + (2 * i) * sizeof(float)));
-        glEnableVertexAttribArray(2 + i);    
+        glVertexAttribPointer(2 + i, 2, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_data_offset, (void*)( (6 + (2 * i)) * sizeof(float)));
+        glEnableVertexAttribArray(2 + i); 
+        setup_textures(gltf.gltf_obj.textures_data[std::to_string(i)]);
     }
 
     if(indices.size() != 0) {
@@ -154,27 +156,30 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
     glBindVertexArray(0);
 }
 
-void Mesh::setup_textures(std::map<std::string,GltfTextureData> texture_data) {
-    // glGenTextures(1,&texture0);
-    // glBindTexture(GL_TEXTURE_2D,texture0);
+void Mesh::setup_textures(GltfTextureData texture_data) {
+    texture_idxs.push_back(0);
 
+    
+    glGenTextures(1,&texture_idxs[texture_idxs.size() - 1]);
+    glBindTexture(GL_TEXTURE_2D,texture_idxs[texture_idxs.size() - 1]);
 
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,texture_data["0"].w,texture_data["0"].h,0,GL_RGB,GL_UNSIGNED_BYTE,texture_data["0"].data.data());
-    // glGenerateMipmap(GL_TEXTURE_2D);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,texture_data.w,texture_data.h,0,GL_RGB,GL_UNSIGNED_BYTE,texture_data.data.data());
+    glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 
 void Mesh::render() {
     glBindVertexArray(vao);
 
-    // if(texture0 != -1) {
-    //     glBindTexture(GL_TEXTURE_2D,texture0);
-    // }
+    for (size_t i = 0; i < texture_idxs.size(); i++){
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D,texture_idxs[i]);
+    }
 
     if(indices.size() != 0) {
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, indices.data());

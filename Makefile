@@ -8,7 +8,7 @@ SHADERS = shader.frag shader.vert
 
 all: main
 	./build/main
-	rm build/main
+	# rm build/main
 	
 
 main: $(OBJS) build/glad.o 
