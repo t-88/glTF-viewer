@@ -15,12 +15,8 @@ out vec2 F_tex_coord;
 
 
 void main() {
-   vec4 pos = vec4(aPos,1.);
-   pos = proj * view * model * pos ; 
-   pos /= pos.w;  
-
    F_normal = normalize(mat3(transpose(inverse(model))) * aNormal);
    F_tex_coord = aTexCoord;
 
-   gl_Position = vec4(pos.x, pos.y, pos.z, 1.0);
+   gl_Position =  proj * view * model * vec4(aPos,1.); 
 };
