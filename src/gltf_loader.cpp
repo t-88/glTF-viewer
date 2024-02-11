@@ -5,6 +5,8 @@
 #include "stb_image.h"
 #include "stb_image_resize.h"
 
+//TODO: compress the functions
+
 void GltfLoader::parse_node(GltfNode node) {
     if(node.mesh_idx.size() != 0) {
         GltfMesh mesh = gltf_obj.meshes[node.mesh_idx];
@@ -361,19 +363,26 @@ void GltfLoader::parse_materials() {
                         mat.pbr_mat.base_color[i] = json["materials"][i]["pbrMetallicRoughness"]["baseColorFactor"][j].asFloat(); 
                     }
                 }
-                if(json["materials"][i]["pbrMetallicRoughness"].isMember("baseColorTexture")) { 
-                    mat.pbr_mat.texture["index"] = json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"]["index"].asInt();
-                    if(json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"].isMember("texCoord")) {
-                        mat.pbr_mat.texture["texCoord"] = json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"]["texCoord"].asInt();
-                    }
-                }
                 if(json["materials"][i]["pbrMetallicRoughness"].isMember("metallicFactor")) { 
                     mat.pbr_mat.metallic_factor = json["materials"][i]["pbrMetallicRoughness"]["metallicFactor"].asFloat();
                 }
                 if(json["materials"][i]["pbrMetallicRoughness"].isMember("roughnessFactor")) { 
                     mat.pbr_mat.roughness_factor = json["materials"][i]["pbrMetallicRoughness"]["roughnessFactor"].asFloat();
                 }
+                if(json["materials"][i]["pbrMetallicRoughness"].isMember("baseColorTexture")) {
+                    mat.pbr_mat.base_texture["index"] = json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"]["index"].asInt();
+                    if(json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"].isMember("texCoord")) {
+                        mat.pbr_mat.base_texture["texCoord"] = json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"]["texCoord"].asInt();
+                    }
+                }                
+                if(json["materials"][i]["pbrMetallicRoughness"].isMember("metallicRoughnessTexture")) { 
+                    mat.pbr_mat.metallic_roughness_texture["index"] = json["materials"][i]["pbrMetallicRoughness"]["metallicRoughnessTexture"]["index"].asInt();
+                    if(json["materials"][i]["pbrMetallicRoughness"]["metallicRoughnessTexture"].isMember("texCoord")) {
+                        mat.pbr_mat.metallic_roughness_texture["texCoord"] = json["materials"][i]["pbrMetallicRoughness"]["metallicRoughnessTexture"]["texCoord"].asInt();
+                    }
+                }
             }
+            gltf_obj.materials[std::to_string(i)] = mat;
         }
     } 
     
