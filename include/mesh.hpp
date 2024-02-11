@@ -18,17 +18,10 @@ public:
     uint32_t vao;
     uint32_t vbo; 
     uint32_t ebo; 
-    uint32_t texture0 = -1;
 
-    bool vertices_are_indexed = false;
-    int indices_count = 0;
-    int vertices_count = 0;
-
-
-    std::vector<float> vertices;
-    std::vector<float> normals;
     std::vector<float> buffer;
     std::vector<uint16_t> indices;
+    int vertices_count = 0;
 
     Shader shader;
 

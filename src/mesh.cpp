@@ -43,35 +43,63 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
     vertices_count = gltf.vertices.size();
     assert(vertices_count != 0 && "mesh dosnt have vertices");
 
-
-
+    indices = gltf.indices;
 
     std::vector<float> normals;
-#if false
+
     // generate normals if none provided 
     if(gltf.normals.size() == 0) {
-    // if(true) {
-        for (size_t i = 0; i < (gltf.vertices.size() / 3) / 3; i++) {
-            glm::vec3 a(gltf.vertices[9 * i + 0],gltf.vertices[9 * i + 1],gltf.vertices[9 * i + 2]);
-            glm::vec3 b(gltf.vertices[9 * i + 3],gltf.vertices[9 * i + 4],gltf.vertices[9 * i + 5]);
-            glm::vec3 c(gltf.vertices[9 * i + 6],gltf.vertices[9 * i + 7],gltf.vertices[9 * i + 8]);
+        // no indices array provided
+        if(indices.size() == 0) {
+            for (size_t i = 0; i < gltf.vertices.size() / 9; i++) {
+                glm::vec3 a(gltf.vertices[9 * i + 0],gltf.vertices[9 * i + 1],gltf.vertices[9 * i + 2]);
+                glm::vec3 b(gltf.vertices[9 * i + 3],gltf.vertices[9 * i + 4],gltf.vertices[9 * i + 5]);
+                glm::vec3 c(gltf.vertices[9 * i + 6],gltf.vertices[9 * i + 7],gltf.vertices[9 * i + 8]);
 
-            glm::vec3 ab = a - b;
-            glm::vec3 ac = a - c;
+                printf("%ld:\n",i);
+                printf("%f %f %f\n",a.x,a.y,a.z);
+                printf("%f %f %f\n",b.x,b.y,b.z);
+                printf("%f %f %f\n",c.x,c.y,c.z);
+                printf("\n");
 
-            glm::vec3 normal = glm::cross(ab,ac);
+                glm::vec3 ab = a - b;
+                glm::vec3 ac = a - c;
 
-            for (size_t i = 0; i < 3; i++) {
-                normals.push_back(normal.x);
-                normals.push_back(normal.y);
-                normals.push_back(normal.z);
+                glm::vec3 normal = glm::cross(ab,ac);
+
+                for (size_t i = 0; i < 3; i++) {
+                    normals.push_back(normal.x);
+                    normals.push_back(normal.y);
+                    normals.push_back(normal.z);
+                }
+            }
+        } else {
+            int traingle_count = indices.size() / 3;
+
+            normals = std::vector<float>(vertices_count);
+            for (size_t i = 0; i < traingle_count; i++) {
+                int a_idx = indices[3 * i + 0];
+                int b_idx = indices[3 * i + 1];
+                int c_idx = indices[3 * i + 2];
+
+                glm::vec3 a(gltf.vertices[3 * a_idx + 0],gltf.vertices[3 * a_idx + 1],gltf.vertices[3 * a_idx + 2]);
+                glm::vec3 b(gltf.vertices[3 * b_idx + 0],gltf.vertices[3 * b_idx + 1],gltf.vertices[3 * b_idx + 2]);
+                glm::vec3 c(gltf.vertices[3 * c_idx + 0],gltf.vertices[3 * c_idx + 1],gltf.vertices[3 * c_idx + 2]);
+            
+                glm::vec3 ab = a - b;
+                glm::vec3 ac = a - c;
+
+                glm::vec3 normal = glm::cross(ab,ac);
+                for (size_t i = 0; i < 3; i++) {
+                    normals[3 * a_idx + i] = normal[i];
+                    normals[3 * b_idx + i] = normal[i];
+                    normals[3 * c_idx + i] = normal[i];
+                }
             }
         }
     } else {
         normals = gltf.normals;
     }
-#endif
-    normals = gltf.normals;
 
 
     // create a the buffer
@@ -91,7 +119,6 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
     }
 
 
-    indices = gltf.indices;
 
     // we count 6 for vertices and normals  
     int vertex_data_offset = 6;
@@ -128,17 +155,17 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
 }
 
 void Mesh::setup_textures(std::map<std::string,GltfTextureData> texture_data) {
-    glGenTextures(1,&texture0);
-    glBindTexture(GL_TEXTURE_2D,texture0);
+    // glGenTextures(1,&texture0);
+    // glBindTexture(GL_TEXTURE_2D,texture0);
 
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,texture_data["0"].w,texture_data["0"].h,0,GL_RGB,GL_UNSIGNED_BYTE,texture_data["0"].data.data());
-    glGenerateMipmap(GL_TEXTURE_2D);
+    // glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,texture_data["0"].w,texture_data["0"].h,0,GL_RGB,GL_UNSIGNED_BYTE,texture_data["0"].data.data());
+    // glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 

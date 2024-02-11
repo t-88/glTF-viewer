@@ -27,8 +27,6 @@ void GltfLoader::parse_node(GltfNode node) {
                                       normal_accessor.byte_offset + 
                                       normal_buffer_view.byte_offset); 
         
-        printf("%d %d\n",pos_buffer_view.byte_stride,normal_buffer_view.byte_stride);
-
         stride_offset = 0;
         if(normal_buffer_view.byte_stride > sizeof(float) * 3) {
             stride_offset = (normal_buffer_view.byte_stride - sizeof(float) * 3) / sizeof(float);
@@ -209,7 +207,6 @@ void GltfLoader::parse_buffer_views() {
 
             if(json["bufferViews"][i].isMember("byteStride")) {
                 buffer_view.byte_stride = json["bufferView"][i]["byteStride"].asInt();
-                printf("%d\n",buffer_view.byte_stride);
             }            
             
             gltf_obj.buffer_views[key] = buffer_view;
