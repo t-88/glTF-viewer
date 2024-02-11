@@ -113,8 +113,6 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
     }
 
 
-
-
     // we count 6 for vertices and normals  
     int vertex_data_offset = 6;
     // we add uv_coords
@@ -137,7 +135,6 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
     for (size_t i = 0; i < gltf.uv_coords.size(); i++) {
         glVertexAttribPointer(2 + i, 2, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_data_offset, (void*)( (6 + (2 * i)) * sizeof(float)));
         glEnableVertexAttribArray(2 + i); 
-        setup_textures(gltf.gltf_obj.textures_data[std::to_string(i)]);
     }
 
     if(indices.size() != 0) {
@@ -149,6 +146,16 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+
+    std::vector<std::string> keys;
+    for(const auto& [key, _] : gltf.gltf_obj.textures_data) {
+        keys.push_back(key);
+    }
+    for (size_t i = 0; i < keys.size(); i++) {
+        printf("%s\n",keys[i].c_str());
+        setup_textures(gltf.gltf_obj.textures_data[keys[i]]);
+    }
 }
 
 void Mesh::setup_textures(GltfTextureData texture_data) {
