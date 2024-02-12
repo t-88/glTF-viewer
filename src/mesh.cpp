@@ -3,6 +3,9 @@
 
 
 Mesh::Mesh(GltfLoader gltf_loader) {
+    texture_idxs[BASE_TEXTURE_KEY] = -1;
+    texture_idxs[NORMAL_TEXTURE_KEY] = -1;
+
     setup_transformations();
     setup_shader(gltf_loader);
     setup_vertices(gltf_loader);
@@ -147,23 +150,27 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    //TODO: this texture loading expects that there is a pbrMetallicRoughness material
+    //watch out i guess :)
+    if(gltf.gltf_obj.materials["0"].base_texture_idx != -1) {
+        setup_textures(BASE_TEXTURE_KEY,
+                       gltf.gltf_obj.textures_data[std::to_string(gltf.gltf_obj.materials["0"].base_texture_idx)]
+                    );
+    }
+    if(gltf.gltf_obj.materials["0"].normal_texture_idx != -1) {
+        setup_textures(NORMAL_TEXTURE_KEY,
+                       gltf.gltf_obj.textures_data[std::to_string(gltf.gltf_obj.materials["0"].normal_texture_idx)]
+                    );
+    }
 
-    std::vector<std::string> keys;
-    for(const auto& [key, _] : gltf.gltf_obj.textures_data) {
-        keys.push_back(key);
-    }
-    for (size_t i = 0; i < keys.size(); i++) {
-        printf("%s\n",keys[i].c_str());
-        setup_textures(gltf.gltf_obj.textures_data[keys[i]]);
-    }
 }
 
-void Mesh::setup_textures(GltfTextureData texture_data) {
-    texture_idxs.push_back(0);
+void Mesh::setup_textures(std::string key,GltfTextureData texture_data) {
+    texture_idxs[key] = 0;
 
     
-    glGenTextures(1,&texture_idxs[texture_idxs.size() - 1]);
-    glBindTexture(GL_TEXTURE_2D,texture_idxs[texture_idxs.size() - 1]);
+    glGenTextures(1,&texture_idxs[key]);
+    glBindTexture(GL_TEXTURE_2D,texture_idxs[key]);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -178,9 +185,16 @@ void Mesh::setup_textures(GltfTextureData texture_data) {
 void Mesh::render() {
     glBindVertexArray(vao);
 
-    for (size_t i = 0; i < texture_idxs.size(); i++){
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D,texture_idxs[i]);
+    if(texture_idxs[BASE_TEXTURE_KEY] != -1) {
+        shader.set_int("base_texture",0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,texture_idxs[BASE_TEXTURE_KEY]);
+    }
+
+    if(texture_idxs[NORMAL_TEXTURE_KEY] != -1) {
+        shader.set_int("normal_texture",1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D,texture_idxs[NORMAL_TEXTURE_KEY]);
     }
 
     if(indices.size() != 0) {

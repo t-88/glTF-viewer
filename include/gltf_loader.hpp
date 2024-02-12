@@ -49,12 +49,18 @@ struct GltfTexture {
 
 struct GltfPBRMaterial {
     std::array<float,4> base_color = {1,1,1,1};
+
+
     float metallic_factor = 1; 
     float roughness_factor = 1; 
-    std::map<std::string,int> texture;
+    std::map<std::string,int> base_texture;
+    std::map<std::string,int> metallic_roughness_texture;
     GltfPBRMaterial() {
-        texture["index"] = -1;
-        texture["texCoord"] = 0;
+        base_texture["index"] = -1;
+        base_texture["texCoord"] = 0;
+
+        metallic_roughness_texture["index"] = -1;
+        metallic_roughness_texture["texCoord"] = 0;
     }
 };
 struct GltfMaterial {
@@ -62,6 +68,9 @@ struct GltfMaterial {
     int shininess = 0;
     std::vector<float> specular;
     std::string technique_idx =  "";
+
+    int base_texture_idx   = -1;
+    int normal_texture_idx = -1;
 
     GltfPBRMaterial pbr_mat;
 };

@@ -371,6 +371,8 @@ void GltfLoader::parse_materials() {
                 }
                 if(json["materials"][i]["pbrMetallicRoughness"].isMember("baseColorTexture")) {
                     mat.pbr_mat.base_texture["index"] = json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"]["index"].asInt();
+                    mat.base_texture_idx = mat.pbr_mat.base_texture["index"];
+                    
                     if(json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"].isMember("texCoord")) {
                         mat.pbr_mat.base_texture["texCoord"] = json["materials"][i]["pbrMetallicRoughness"]["baseColorTexture"]["texCoord"].asInt();
                     }
@@ -381,6 +383,10 @@ void GltfLoader::parse_materials() {
                         mat.pbr_mat.metallic_roughness_texture["texCoord"] = json["materials"][i]["pbrMetallicRoughness"]["metallicRoughnessTexture"]["texCoord"].asInt();
                     }
                 }
+            }
+
+            if(json["materials"][i].isMember("normalTexture")) {
+                mat.normal_texture_idx = json["materials"][i]["normalTexture"]["index"].asInt();
             }
             gltf_obj.materials[std::to_string(i)] = mat;
         }

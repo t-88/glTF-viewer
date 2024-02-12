@@ -13,6 +13,9 @@
 #include "pch.hpp"
 
 
+#define BASE_TEXTURE_KEY "base-texture"
+#define NORMAL_TEXTURE_KEY "normal-texture"
+
 class Mesh {
 public:
     uint32_t vao;
@@ -25,7 +28,7 @@ public:
 
     Shader shader;
 
-    std::vector<uint32_t> texture_idxs;
+    std::map<std::string,uint32_t> texture_idxs;
     uint32_t texture0;
 
     // transformations
@@ -44,7 +47,7 @@ public:
     void setup_shader(GltfLoader gltf_loader);
     void setup_vertices(GltfLoader gltf_loader);
 
-    void setup_textures(GltfTextureData texture_data);
+    void setup_textures(std::string key,GltfTextureData texture_data);
     void setup_textures(std::map<std::string,GltfTextureData> texture_data);
     void render();
 
