@@ -39,6 +39,10 @@ public:
     glm::vec3 translate;
     glm::mat4x4 translation_mat;
 
+    glm::mat4x4 inverse_yz_matrix;
+
+
+
     
     Mesh(GltfLoader gltf_loader);
     ~Mesh();

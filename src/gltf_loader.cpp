@@ -129,12 +129,21 @@ void GltfLoader::parse_nodes() {
     if(json["nodes"].isArray()) {
         for (int i = 0; i < json["nodes"].size(); i++) {
             GltfNode node;
+            
             // children 
             if(json["nodes"][i].isMember("children")) {
                 for (int j = 0; j < json["nodes"][i]["children"].size(); j++) {
                     node.children.push_back(json["nodes"][i]["children"][j].asString());
                 }
             }
+            if(json["nodes"][i].isMember("matrix")) {
+                for (int y = 0; y < 4; y++) {
+                    for (int x = 0; x < 4; x++) {
+                        node.matrix[y][x] = json["nodes"][i]["matrix"][y * 4 + x].asFloat();
+                    }                
+                }                
+            }
+
             // mesh
             if(json["nodes"][i].isMember("mesh")) { 
                 node.mesh_idx = json["nodes"][i]["mesh"].asString();
@@ -440,6 +449,7 @@ GltfLoader::GltfLoader(const char *gltf_path)
 
     
     GltfNode main_node = gltf_obj.nodes[gltf_obj.main_scene.nodes["0"]];
+    main_transformation = main_node.matrix;
     parse_node(main_node);
 }
 

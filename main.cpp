@@ -63,10 +63,15 @@ int main() {
 
     if(glfw_init() == -1) { return -1; }
     imgui_init(window);
-    stbi_set_flip_vertically_on_load(true);
 
-    GltfLoader gltf_loader("assets/box_with_spaces/BoxWithSpaces.gltf");
+    GltfLoader gltf_loader("assets/box_textured/BoxTextured.gltf");
     Mesh mesh(gltf_loader);
+
+
+    glm::mat4 proj = glm::perspective(glm::radians(45.f),(float)SCENE_WIDTH/HEIGHT,0.1f,100.f);
+    mesh.shader.enable();
+    mesh.shader.set_mat4x4("proj",glm::value_ptr(proj));
+
 
     glEnable(GL_DEPTH_TEST);
     while (!glfwWindowShouldClose(window)) {
@@ -75,8 +80,6 @@ int main() {
             glfwSetWindowShouldClose(window,true);
         }
 
-
-        mesh.shader.enable();
         mesh.render();      
 
         {
@@ -108,7 +111,7 @@ int main() {
 
                 if(translate_updated || rotation_updated || scale_updated) {
                     auto model = glm::mat4(1.);
-                    model = mesh.translation_mat * mesh.rotation_mat * mesh.scale_mat; 
+                    model =   (mesh.translation_mat * mesh.rotation_mat * mesh.scale_mat) * gltf_loader.main_transformation; 
                     mesh.shader.enable();
                     mesh.shader.set_mat4x4("model",glm::value_ptr(model));
                 }          

@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include "json.h"
+#include "pch.hpp"
 
 
 struct GltfMesh {
@@ -16,6 +17,7 @@ struct GltfMesh {
 struct GltfNode {
     std::vector<std::string> children;
     std::string mesh_idx = "";   
+    glm::mat4x4 matrix = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 };
 struct GltfScene {
     std::map<std::string, std::string> nodes;
@@ -117,6 +119,9 @@ public:
     std::vector<std::vector<float>> uv_coords;
 
 
+
+
+    glm::mat4x4 main_transformation;
     GltfObj gltf_obj;
 
 

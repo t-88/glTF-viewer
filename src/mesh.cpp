@@ -6,6 +6,15 @@ Mesh::Mesh(GltfLoader gltf_loader) {
     texture_idxs[BASE_TEXTURE_KEY] = -1;
     texture_idxs[NORMAL_TEXTURE_KEY] = -1;
 
+
+    inverse_yz_matrix = {
+        1,0,0,0,
+        0,0,1,0,
+        0,1,0,0,
+        0,0,0,1
+    };    
+
+
     setup_transformations();
     setup_shader(gltf_loader);
     setup_vertices(gltf_loader);
@@ -15,32 +24,38 @@ Mesh::~Mesh() {}
 void Mesh::setup_transformations() {
     rotation = glm::vec3(0.);
     rotation_mat = glm::mat4x4(1.);
-    scale =glm::vec3(0.25);
+    scale = glm::vec3(0.25);
     scale_mat = glm::scale(glm::mat4x4(1.),scale);
+    
     translate = glm::vec3(0.,0.,-1.);
+
     translation_mat = glm::translate(glm::mat4x4(1.),translate);
 }
 void Mesh::setup_shader(GltfLoader gltf_loader) {
     // TODO: its just temp for now, plz remove it 
-    #define WIDTH 800
-    #define GUI_WIDTH 200
-    #define SCENE_WIDTH (WIDTH - GUI_WIDTH)
-    #define HEIGHT 600
+    glm::mat4 model =  translation_mat * rotation_mat * scale_mat * gltf_loader.main_transformation;
+    for (size_t y = 0; y < 4; y++) {
+    for (size_t x = 0; x < 4; x++) {
+            printf("%f ",inverse_yz_matrix[y][x]);
+        }
+        printf("\n");
+    }
     
-    glm::mat4 model = translation_mat * rotation_mat * scale_mat;
+    
+    // select the right shader    
+    if(gltf_loader.gltf_obj.textures_data.size() != 0) { 
+        shader = Shader("shaders/texture_shader.vert","shaders/texture_shader.frag");
+    } else {
+        shader = Shader("shaders/default_shader.vert","shaders/default_shader.frag");
+    }
+
+
     glm::mat4 view = glm::mat4(1.);
-    glm::mat4 proj = glm::perspective(glm::radians(45.f),(float)SCENE_WIDTH/HEIGHT,0.1f,100.f);
     glm::vec3 light_dir = glm::vec3(0.,0.,1.);
-    
-    shader = Shader("./shader.vert","./shader.frag");
     shader.enable();
-    shader.set_mat4x4("proj",glm::value_ptr(proj));
     shader.set_mat4x4("view",glm::value_ptr(view));
     shader.set_mat4x4("model",glm::value_ptr(model));
     shader.set_vec3("light_dir",{light_dir.x,light_dir.y,light_dir.z});
-
-
-
 }
 void Mesh::setup_vertices(GltfLoader gltf)  {
     vertices_count = gltf.vertices.size();
@@ -115,9 +130,9 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
         }
     }
 
-
     // we count 6 for vertices and normals  
     int vertex_data_offset = 6;
+
     // we add uv_coords
     vertex_data_offset += 2 * gltf.uv_coords.size(); 
 
@@ -132,7 +147,6 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_data_offset, (void*)( 3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
 
     // point to the texture uv
     for (size_t i = 0; i < gltf.uv_coords.size(); i++) {
@@ -183,6 +197,8 @@ void Mesh::setup_textures(std::string key,GltfTextureData texture_data) {
 
 
 void Mesh::render() {
+    shader.enable();
+
     glBindVertexArray(vao);
 
     if(texture_idxs[BASE_TEXTURE_KEY] != -1) {
