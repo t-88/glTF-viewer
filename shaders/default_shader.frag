@@ -4,6 +4,8 @@ out vec4 FragColor;
 in vec3 F_normal;
 uniform vec3 light_dir;
 
+uniform vec3 base_color;
+
 void main() {
     // simple diffuse shading    
     vec3 normal = normalize(F_normal); 
@@ -12,7 +14,7 @@ void main() {
     vec3 diffuse = vec3(intensity, intensity, intensity);
 
 
-    vec4 color = vec4(0.6,0.8,0.2,1);
+    vec4 color = vec4(base_color,1);
 
     FragColor =  color * vec4(diffuse + ambient,1);
 }

@@ -59,12 +59,13 @@ int glfw_init() {
     return 0;
 }
 
+
 int main() {
 
     if(glfw_init() == -1) { return -1; }
     imgui_init(window);
 
-    GltfLoader gltf_loader("assets/box_textured/BoxTextured.gltf");
+    GltfLoader gltf_loader("assets/box_vertex_color/box_vertex_color.gltf");
     Mesh mesh(gltf_loader);
 
 

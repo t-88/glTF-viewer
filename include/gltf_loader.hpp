@@ -8,6 +8,7 @@
 struct GltfMesh {
     std::string normal_idx , position_idx ,indices_idx;
     std::vector<std::string> texture_idx;
+
     GltfMesh() {
         normal_idx = "";
         position_idx = "";
@@ -25,6 +26,8 @@ struct GltfScene {
 
 struct GltfAccessor {
     std::string buffer_view_idx = "";
+    std::array<float,3> max = {1,1,1};
+    std::array<float,3> min = {-1,-1,-1};
     int byte_offset = 0;
     int count = 0;
 };
@@ -50,7 +53,7 @@ struct GltfTexture {
 };
 
 struct GltfPBRMaterial {
-    std::array<float,4> base_color = {1,1,1,1};
+    std::array<float,3> base_color = {1,1,1};
 
 
     float metallic_factor = 1; 
@@ -101,12 +104,9 @@ struct GltfObj {
     std::map<std::string,GltfProgram> programs;
     std::map<std::string,GltfTechnique> techniques;
 
-
     std::string dir_path;
     std::map<std::string,std::vector<char>> buffers;
     std::map<std::string,GltfTextureData> textures_data;
-
-
 };
 
 
@@ -114,12 +114,11 @@ class GltfLoader {
 public:
     Json::Value json;
     std::vector<float> vertices;
+    bool is_vertices_centered = true;
+
     std::vector<uint16_t> indices;
     std::vector<float> normals;
     std::vector<std::vector<float>> uv_coords;
-
-
-
 
     glm::mat4x4 main_transformation;
     GltfObj gltf_obj;

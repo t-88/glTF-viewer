@@ -16,15 +16,36 @@ void GltfLoader::parse_node(GltfNode node) {
                                   pos_accessor.byte_offset + 
                                   pos_buffer_view.byte_offset); 
 
+        // coords system is from 0 to 1
+        bool nigative_exist = false;
+        for (size_t i = 0; i < 3; i++) {
+            if(pos_accessor.min[i] < 0) {
+                nigative_exist = true;
+                break;
+            }  
+        }
+        is_vertices_centered = nigative_exist;
+        
+
         // data is interleaved
         int stride_offset = 0;
         if(pos_buffer_view.byte_stride > sizeof(float) * 3) {
             stride_offset = (pos_buffer_view.byte_stride - sizeof(float) * 3) / sizeof(float);
         }
         for (size_t i = 0; i < pos_accessor.count; i++) {
-            vertices.push_back(pos_buf[i * 3 + 0 + i * stride_offset]);
-            vertices.push_back(pos_buf[i * 3 + 1 + i * stride_offset]);
-            vertices.push_back(pos_buf[i * 3 + 2 + i * stride_offset]);
+            float a = pos_buf[i * 3 + 0 + i * stride_offset];
+            float b = pos_buf[i * 3 + 1 + i * stride_offset];
+            float c = pos_buf[i * 3 + 2 + i * stride_offset];
+            
+            if(!is_vertices_centered) {
+                // make vertices them centered
+                a = a * 2 - 1;
+                b = b * 2 - 1;
+                c = c * 2 - 1;
+            } 
+            vertices.push_back(a);
+            vertices.push_back(b);
+            vertices.push_back(c);
         }
 
         GltfAccessor normal_accessor = gltf_obj.accessors[mesh.normal_idx];
@@ -173,28 +194,37 @@ void GltfLoader::parse_nodes() {
     }
 }
 void GltfLoader::parse_accessor() {
-    if(json["accessors"].isArray()) { 
-        for (int i = 0; i < json["accessors"].size(); i++) {
-            GltfAccessor accessor;
+    #define PARSE_ACCESSOR(key) \
+        accessor.buffer_view_idx = json["accessors"][key]["bufferView"].asString();\
+        accessor.byte_offset = json["accessors"][key]["byteOffset"].asInt();\
+        accessor.count = json["accessors"][key]["count"].asInt();            \
+        if(json["accessors"][key].isMember("max")) {\
+            for (int j = 0; j < 3; j++) {\
+                accessor.max[j] = json["accessors"][key]["max"][j].asFloat();\
+            }\
+        }\
+        if(json["accessors"][key].isMember("min")) {\
+            for (int j = 0; j < 3; j++) {\
+                accessor.min[j] = json["accessors"][key]["min"][j].asFloat();\
+            }\
+        }    \
 
-            accessor.buffer_view_idx = json["accessors"][i]["bufferView"].asString();
-            accessor.byte_offset = json["accessors"][i]["byteOffset"].asInt();
-            accessor.count = json["accessors"][i]["count"].asInt();
+    for (int i = 0; i < json["accessors"].size(); i++) {
+        GltfAccessor accessor;
+        std::string key;
 
-            gltf_obj.accessors[std::to_string(i)] = accessor;
+        if(json["accessors"].isArray()) { 
+            key = std::to_string(i);
+            PARSE_ACCESSOR(i);
+        } else {
+            key = json["accessors"].getMemberNames()[i];
+            PARSE_ACCESSOR(key);
         }
-    } else {
-        for (int i = 0; i < json["accessors"].size(); i++) {
-            GltfAccessor accessor;
-            std::string key = json["accessors"].getMemberNames()[i];
+        gltf_obj.accessors[key] = accessor;
+    }    
 
-            accessor.buffer_view_idx = json["accessors"][key]["bufferView"].asString();
-            accessor.byte_offset = json["accessors"][key]["byteOffset"].asInt();
-            accessor.count = json["accessors"][key]["count"].asInt();
 
-            gltf_obj.accessors[key] = accessor;
-        }        
-    }
+    #undef PARSE_ACCESSOR
 }
 void GltfLoader::parse_buffer_views() {
     if(json["bufferViews"].isArray()) {  
