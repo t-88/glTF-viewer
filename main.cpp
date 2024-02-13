@@ -40,7 +40,7 @@ int glfw_init() {
     glfwWindowHint(GLFW_RESIZABLE,GLFW_FALSE);
 
 
-    window = glfwCreateWindow(WIDTH,HEIGHT,"42",NULL,NULL);
+    window = glfwCreateWindow(WIDTH,HEIGHT,"glTF Viewer",NULL,NULL);
     
     if(window == NULL) {
         ERROR("failed to create window");
@@ -65,7 +65,7 @@ int main() {
     if(glfw_init() == -1) { return -1; }
     imgui_init(window);
 
-    GltfLoader gltf_loader("assets/box_vertex_color/box_vertex_color.gltf");
+    GltfLoader gltf_loader("assets/helmet/DamagedHelmet.gltf");
     Mesh mesh(gltf_loader);
 
 
