@@ -89,6 +89,20 @@ void GltfLoader::parse_node(GltfNode node) {
             }            
             uv_coords.push_back(uv_coord);
         }
+
+        // support vertex colors 
+        if(mesh.colors_idx.size() != 0) {
+            GltfAccessor color_accessor = gltf_obj.accessors[mesh.colors_idx];
+            GltfBufferView color_buffer_view = gltf_obj.buffer_views[color_accessor.buffer_view_idx];
+            float* color_buf = (float*)(gltf_obj.buffers[color_buffer_view.buffer_idx].data() + 
+                                          color_accessor.byte_offset + 
+                                          color_buffer_view.byte_offset); 
+            for (size_t i = 0; i < color_accessor.count; i++) {
+                colors.push_back(color_buf[i * 3 + 0 + i * stride_offset]);
+                colors.push_back(color_buf[i * 3 + 1 + i * stride_offset]);
+                colors.push_back(color_buf[i * 3 + 2 + i * stride_offset]);
+            }            
+        }
     }
 
     for (size_t i = 0; i < node.children.size(); i++) {
@@ -108,11 +122,14 @@ void GltfLoader::parse_meshes() {
             if(json["meshes"][i]["primitives"][0]["attributes"].isMember("POSITION")) { 
                 mesh.position_idx = std::to_string(json["meshes"][i]["primitives"][0]["attributes"]["POSITION"].asInt());
             }
-
             // just handle one texture as a start 
             if(json["meshes"][i]["primitives"][0]["attributes"].isMember("TEXCOORD_0")) { 
                 mesh.texture_idx.push_back(std::to_string(json["meshes"][i]["primitives"][0]["attributes"]["TEXCOORD_0"].asInt()));
             }  
+            if(json["meshes"][i]["primitives"][0]["attributes"].isMember("COLOR_0")) { 
+                mesh.colors_idx = std::to_string(json["meshes"][i]["primitives"][0]["attributes"]["COLOR_0"].asInt());
+            }  
+
 
             if(json["meshes"][i]["primitives"][0].isMember("indices")) { 
                 mesh.indices_idx = std::to_string(json["meshes"][i]["primitives"][0]["indices"].asInt());

@@ -6,7 +6,7 @@
 
 
 struct GltfMesh {
-    std::string normal_idx , position_idx ,indices_idx;
+    std::string normal_idx , position_idx ,indices_idx, colors_idx;
     std::vector<std::string> texture_idx;
 
     GltfMesh() {
@@ -118,6 +118,7 @@ public:
 
     std::vector<uint16_t> indices;
     std::vector<float> normals;
+    std::vector<float> colors;
     std::vector<std::vector<float>> uv_coords;
 
     glm::mat4x4 main_transformation;

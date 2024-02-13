@@ -34,7 +34,11 @@ void Mesh::setup_shader(GltfLoader gltf_loader) {
     if(gltf_loader.gltf_obj.textures_data.size() != 0) { 
         shader = Shader("shaders/texture_shader.vert","shaders/texture_shader.frag");
     } else {
-        shader = Shader("shaders/default_shader.vert","shaders/default_shader.frag");
+        if(gltf_loader.colors.size() != 0) {
+            shader = Shader("shaders/vertex_colors_shader.vert","shaders/vertex_colors_shader.frag");
+        } else {
+            shader = Shader("shaders/default_shader.vert","shaders/default_shader.frag");
+        }
     }
 
     glm::mat4 view = glm::mat4(1.);
@@ -54,6 +58,9 @@ void Mesh::setup_shader(GltfLoader gltf_loader) {
     } else {
         shader.set_vec3("base_color",{1,1,1});
     }
+
+
+
 }
 void Mesh::setup_vertices(GltfLoader gltf)  {
     vertices_count = gltf.vertices.size();
@@ -122,10 +129,19 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
         buffer.push_back(normals[3 * i + 1]);        
         buffer.push_back(normals[3 * i + 2]);   
 
-        for (size_t j = 0; j < gltf.uv_coords.size(); j++) {
-            buffer.push_back(gltf.uv_coords[j][2 * i + 0]);
-            buffer.push_back(gltf.uv_coords[j][2 * i + 1]);
+        if(gltf.uv_coords.size() != 0) {
+            for (size_t j = 0; j < gltf.uv_coords.size(); j++) {
+                buffer.push_back(gltf.uv_coords[j][2 * i + 0]);
+                buffer.push_back(gltf.uv_coords[j][2 * i + 1]);
+            }
         }
+
+        // dont use vertex colors if textures are included, i dont want to write more shaders with small modifications
+        if(gltf.uv_coords.size() == 0 && gltf.colors.size() != 0) {
+            buffer.push_back(gltf.colors[3 * i + 0]);        
+            buffer.push_back(gltf.colors[3 * i + 1]);        
+            buffer.push_back(gltf.colors[3 * i + 2]);   
+        } 
     }
 
     // we count 6 for vertices and normals  
@@ -133,6 +149,13 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
 
     // we add uv_coords
     vertex_data_offset += 2 * gltf.uv_coords.size(); 
+
+    // add vertex colors if exist
+    if(gltf.uv_coords.size() == 0) {
+        if(gltf.colors.size() != 0) {
+            vertex_data_offset += 3;
+        }
+    }
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
@@ -150,6 +173,13 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
     for (size_t i = 0; i < gltf.uv_coords.size(); i++) {
         glVertexAttribPointer(2 + i, 2, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_data_offset, (void*)( (6 + (2 * i)) * sizeof(float)));
         glEnableVertexAttribArray(2 + i); 
+    }
+
+    if(gltf.uv_coords.size() == 0) {
+        if(gltf.colors.size() != 0) {
+            glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(float) * vertex_data_offset, (void*)( 6 * sizeof(float)));
+            glEnableVertexAttribArray(2); 
+        }
     }
 
     if(indices.size() != 0) {
@@ -179,7 +209,6 @@ void Mesh::setup_vertices(GltfLoader gltf)  {
 void Mesh::setup_textures(std::string key,GltfTextureData texture_data) {
     texture_idxs[key] = 0;
 
-    
     glGenTextures(1,&texture_idxs[key]);
     glBindTexture(GL_TEXTURE_2D,texture_idxs[key]);
 
